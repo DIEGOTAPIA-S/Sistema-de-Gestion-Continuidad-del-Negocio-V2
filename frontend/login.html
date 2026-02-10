@@ -49,7 +49,7 @@
             <label>Contraseña</label>
             <input type="password" id="password" required placeholder="••••••••">
 
-            <button type="submit" class="btn-primary" style="margin-top: 25px;">Entrar al Sistema</button>
+            <button type="submit" id="btnLogin" class="btn-primary" style="margin-top: 25px;">Entrar al Sistema</button>
             <div id="errorMsg" class="error-msg">Usuario o clave incorrectos</div>
         </form>
     </div>
@@ -57,8 +57,14 @@
     <script>
         document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('btnLogin');
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
+
+            // Bloquear botón
+            btn.disabled = true;
+            btn.innerText = "Verificando...";
+            document.getElementById('errorMsg').style.display = 'none';
 
             try {
                 const res = await fetch('http://127.0.0.1:8000/api/token/', {
@@ -69,19 +75,20 @@
 
                 if (res.ok) {
                     const data = await res.json();
-                    // GUARDAR LA LLAVE (TOKEN) EN EL NAVEGADOR
                     localStorage.setItem('token', data.access);
                     localStorage.setItem('refresh_token', data.refresh);
                     localStorage.setItem('user_name', data.full_name);
                     localStorage.setItem('role', data.role);
-
-                    // IR AL MAPA
                     window.location.href = 'index.html';
                 } else {
                     document.getElementById('errorMsg').style.display = 'block';
+                    btn.disabled = false;
+                    btn.innerText = "Entrar al Sistema";
                 }
             } catch (err) {
-                alert("Error de conexión con el servidor");
+                alert("Error de conexión con el servidor. Asegúrese que el Backend esté corriendo.");
+                btn.disabled = false;
+                btn.innerText = "Entrar al Sistema";
             }
         };
     </script>
