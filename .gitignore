@@ -1,0 +1,36 @@
+# General
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.DS_Store
+Thumbs.db
+
+# Virtual Environments
+venv/
+env/
+.env
+.venv/
+backend/venv/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Frontend / Node (Future proof)
+node_modules/
+dist/
+build/
+.npm/
+
+# IDEs
+.vscode/
+.idea/
+
+# Reports
+*.pdf
+*.csv
