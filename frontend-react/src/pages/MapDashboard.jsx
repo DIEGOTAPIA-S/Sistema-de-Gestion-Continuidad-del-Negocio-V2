@@ -13,6 +13,7 @@ import { generatePDFReport } from '../utils/reportGenerator';
 import { toPng } from 'html-to-image';
 import EarthquakeLayer from '../components/EarthquakeLayer'; // Importar capa de sismos
 import WeatherLayer from '../components/WeatherLayer'; // Importar capa de clima
+import InstructionsModal from '../components/InstructionsModal'; // Importar modal de instrucciones
 
 const MapDashboard = () => {
     const { user, logout } = useAuth();
@@ -28,10 +29,12 @@ const MapDashboard = () => {
     const [showCharts, setShowCharts] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
     const [showList, setShowList] = useState(false);
+    const [showHelp, setShowHelp] = useState(false); // Help Modal State
 
     // Layers Logic
     const [showEarthquakes, setShowEarthquakes] = useState(false);
     const [showWeather, setShowWeather] = useState(false); // Weather Layer State
+    const [showTraffic, setShowTraffic] = useState(false); // Traffic State
     const [earthquakeAlerts, setEarthquakeAlerts] = useState([]);
     const [emergencyAlert, setEmergencyAlert] = useState(null); // State for the popup
     const [focusLocation, setFocusLocation] = useState(null); // State for map FlyTo
@@ -251,6 +254,9 @@ const MapDashboard = () => {
                     }}
                     onToggleWeather={() => setShowWeather(!showWeather)}
                     showWeather={showWeather}
+                    onToggleTraffic={() => setShowTraffic(!showTraffic)}
+                    showTraffic={showTraffic}
+                    onShowHelp={() => setShowHelp(true)}
                 />
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', height: '100%', padding: '20px', gap: '20px' }}>
@@ -261,7 +267,7 @@ const MapDashboard = () => {
                     </div>
 
                     {/* Map */}
-                    <div id="map-capture" style={{ height: '500px', flexShrink: 0, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                    <div id="map-capture" style={{ height: '500px', flexShrink: 0, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', position: 'relative' }}>
                         <MapComponent
                             sedes={filteredSedes}
                             onAnalysisUpdate={handleAnalysisUpdate}
@@ -270,6 +276,44 @@ const MapDashboard = () => {
                             <EarthquakeLayer visible={showEarthquakes} onAlertsUpdate={setEarthquakeAlerts} />
                             <WeatherLayer visible={showWeather} sedes={sedes} />
                         </MapComponent>
+
+                        {/* Waze Traffic Overlay */}
+                        {showTraffic && (
+                            <div style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                zIndex: 2000,
+                                background: 'white'
+                            }}>
+                                <iframe
+                                    src="https://embed.waze.com/iframe?zoom=12&lat=4.711&lon=-74.072&ct=livemap"
+                                    width="100%"
+                                    height="100%"
+                                    allowFullScreen
+                                    style={{ border: 'none' }}
+                                ></iframe>
+                                <button
+                                    onClick={() => setShowTraffic(false)}
+                                    style={{
+                                        position: 'absolute',
+                                        top: '10px',
+                                        right: '10px',
+                                        background: 'white',
+                                        border: '1px solid #ccc',
+                                        padding: '5px 10px',
+                                        cursor: 'pointer',
+                                        zIndex: 2001,
+                                        fontWeight: 'bold',
+                                        borderRadius: '4px'
+                                    }}
+                                >
+                                    ❌ Cerrar Tráfico
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Event Summary Box (Above Charts) */}
@@ -298,6 +342,7 @@ const MapDashboard = () => {
 
             {showHistory && <EventHistoryModal onClose={() => setShowHistory(false)} />}
             {showList && <SedeListModal sedes={sedesWithStatus} onClose={() => setShowList(false)} />}
+            {showHelp && <InstructionsModal onClose={() => setShowHelp(false)} />}
 
             {/* Emergency Popup Overlay */}
             {emergencyAlert && (

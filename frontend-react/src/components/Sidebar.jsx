@@ -15,7 +15,10 @@ const Sidebar = ({
     earthquakeAlerts = [], // New prop: List of alert strings/objects
     onSimulateAlert, // New prop: Function to trigger mock alert
     onToggleWeather, // New prop
-    showWeather      // New prop
+    showWeather,      // New prop
+    onToggleTraffic, // New prop
+    showTraffic,      // New prop
+    onShowHelp       // New prop
 }) => {
     const [eventDetails, setEventDetails] = useState({
         description: '',
@@ -42,31 +45,47 @@ const Sidebar = ({
                 <button onClick={onShowList} className="btn-sidebar">
                     📋 S. Totales
                 </button>
-                <button onClick={onShowHistory} className="btn-sidebar">
-                    📜 Historial
-                </button>
+
                 <button onClick={onToggleCharts} className={`btn-sidebar ${showCharts ? 'active' : ''}`}>
                     📊 {showCharts ? 'Ocultar' : 'Métricas'}
                 </button>
-                <div style={{ display: 'flex', gap: '5px' }}>
-                    <button onClick={onToggleEarthquakes} className={`btn-sidebar ${showEarthquakes ? 'active-red' : ''}`} style={{ flex: 1 }}>
-                        ⚡ {showEarthquakes ? 'Ocultar' : 'Sismos'}
+
+                <button onClick={onToggleWeather} className={`btn-sidebar ${showWeather ? 'active-blue' : ''}`}>
+                    ☁️ {showWeather ? 'Ocultar Clima' : 'Clima'}
+                </button>
+
+                <button onClick={onToggleTraffic} className={`btn-sidebar ${showTraffic ? 'active-orange' : ''}`}>
+                    🚗 {showTraffic ? 'Ocultar Tráfico' : 'Tráfico'}
+                </button>
+
+                {/* Sismos Control Group */}
+                <div style={{ display: 'flex', gap: '5px', gridColumn: '1 / -1' }}>
+                    <button onClick={onToggleEarthquakes} className={`btn-sidebar ${showEarthquakes ? 'active-red' : ''}`} style={{ flex: 1, justifyContent: 'space-between' }}>
+                        <span>⚡ {showEarthquakes ? 'Ocultar Sismos' : 'Sismos'}</span>
+                        {earthquakeAlerts.length > 0 && <span style={{ background: 'white', color: '#e11d48', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 'bold' }}>{earthquakeAlerts.length}</span>}
                     </button>
                     {showEarthquakes && (
-                        <button onClick={onSimulateAlert} className="btn-sidebar" style={{ width: '40px', padding: '0', fontSize: '1.2rem' }} title="Simular Alerta">
+                        <button onClick={onSimulateAlert} className="btn-sidebar" style={{ width: '50px', padding: '0', fontSize: '1.2rem', justifyContent: 'center' }} title="Simular Alerta">
                             🔔
                         </button>
                     )}
                 </div>
 
-                <button onClick={onToggleWeather} className={`btn-sidebar ${showWeather ? 'active-blue' : ''}`}>
-                    ☁️ {showWeather ? 'Ocultar Clima' : 'Clima'}
+                <button onClick={onShowHistory} className="btn-sidebar">
+                    📜 Historial
                 </button>
+
                 <button onClick={onGenerateReport} className="btn-sidebar btn-green" disabled={affectedSedes.length === 0}>
                     📥 PDF
                 </button>
-                <button onClick={onSave} className="btn-sidebar btn-dark" style={{ gridColumn: '1 / -1' }}>
-                    💾 Guardar Evento
+
+                <button onClick={onSave} className="btn-sidebar btn-dark">
+                    💾 Guardar
+                </button>
+
+                {/* Help Button */}
+                <button onClick={onShowHelp} className="btn-sidebar" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569' }}>
+                    ❓ Ayuda
                 </button>
             </div>
 
@@ -150,6 +169,7 @@ const Sidebar = ({
                 .btn-sidebar.active { background: #2563eb; color: white; border-color: #2563eb; }
                 .btn-sidebar.active-red { background: #e11d48; color: white; border-color: #e11d48; animation: pulse 2s infinite; }
                 .btn-sidebar.active-blue { background: #0ea5e9; color: white; border-color: #0ea5e9; }
+                .btn-sidebar.active-orange { background: #f97316; color: white; border-color: #f97316; }
                 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(225, 29, 72, 0); } 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); } }
                 .btn-sidebar.btn-green { background: #10b981; color: white; border: none; }
                 .btn-sidebar.btn-green:hover { background: #059669; }
