@@ -281,9 +281,8 @@ const MapDashboard = () => {
 
                 {/* Right Content Area (Scrollable) */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', position: 'relative' }}>
-
-                    {/* News Feed Overlay */}
-                    {showNews && <NewsFeed onClose={() => setShowNews(false)} />}
+                    {/* News Feed Overlay (Fixed: Pass isOpen prop) */}
+                    {showNews && <NewsFeed isOpen={true} onClose={() => setShowNews(false)} />}
 
                     {/* Map Container (65% Height / Min 500px) */}
                     <div id="map-capture" style={{ height: '65vh', minHeight: '500px', flexShrink: 0, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', position: 'relative' }}>
