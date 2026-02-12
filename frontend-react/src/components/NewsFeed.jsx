@@ -1,16 +1,14 @@
-
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 const NewsFeed = ({ isOpen, onClose }) => {
-    const { token } = useAuth();
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('movilidad');
-    const [isExpanded, setIsExpanded] = useState(false); // State for width expansion
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const topics = {
-        movilidad: { label: '🚦 Movilidad', query: 'Bogotá Movilidad' }, // Broader query
+        movilidad: { label: '🚦 Movilidad', query: 'Bogotá Movilidad' },
         orden: { label: '🛡️ Orden Público', query: 'Colombia Paro' },
         clima: { label: '⛈️ Clima', query: 'Colombia Alertas Ideam' }
     };
@@ -24,15 +22,8 @@ const NewsFeed = ({ isOpen, onClose }) => {
     const fetchNews = async (query) => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:8000/api/news/?q=${query}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setNews(data);
-            }
+            const response = await api.get(`/news/?q=${query}`);
+            setNews(response.data);
         } catch (error) {
             console.error("Error fetching news:", error);
         } finally {
