@@ -43,7 +43,7 @@ const Sidebar = ({
             {/* Action Buttons Section */}
             <div style={{ padding: '10px 20px 20px 20px', borderBottom: '1px solid #f1f5f9', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <button onClick={onShowList} className="btn-sidebar">
-                    📋 S. Totales
+                    📋 Sedes
                 </button>
 
                 <button onClick={onToggleCharts} className={`btn-sidebar ${showCharts ? 'active' : ''}`}>
@@ -59,7 +59,7 @@ const Sidebar = ({
                 </button>
 
                 {/* Sismos Control Group */}
-                <div style={{ display: 'flex', gap: '5px', gridColumn: '1 / -1' }}>
+                <div style={{ display: 'flex', gap: '5px' }}>
                     <button onClick={onToggleEarthquakes} className={`btn-sidebar ${showEarthquakes ? 'active-red' : ''}`} style={{ flex: 1, justifyContent: 'space-between' }}>
                         <span>⚡ {showEarthquakes ? 'Ocultar Sismos' : 'Sismos'}</span>
                         {earthquakeAlerts.length > 0 && <span style={{ background: 'white', color: '#e11d48', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 'bold' }}>{earthquakeAlerts.length}</span>}
@@ -79,13 +79,14 @@ const Sidebar = ({
                     📥 PDF
                 </button>
 
-                <button onClick={onSave} className="btn-sidebar btn-dark">
-                    💾 Guardar
-                </button>
-
-                {/* Help Button */}
+                {/* Help Button - Moved here to complete grid (4th Row) */}
                 <button onClick={onShowHelp} className="btn-sidebar" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569' }}>
                     ❓ Ayuda
+                </button>
+
+                {/* Save Button - Full Width at Bottom (5th Row) */}
+                <button onClick={onSave} className="btn-sidebar btn-dark" style={{ gridColumn: '1 / -1' }}>
+                    💾 Guardar
                 </button>
             </div>
 

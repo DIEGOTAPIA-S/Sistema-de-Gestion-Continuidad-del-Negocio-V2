@@ -52,98 +52,124 @@ const ProcessManagementModal = ({ sede, onClose, onUpdate }) => {
             backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
             zIndex: 2000
         }}>
-            <div className="card" style={{ width: '700px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
-                <button
-                    onClick={onClose}
-                    style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'cursor' }}
-                >
-                    &times;
-                </button>
-
-                <h2 className="mb-4">Procesos de: {sede.nombre}</h2>
-
-                {/* List of Processes */}
-                <div style={{ marginBottom: '20px' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                            <tr style={{ background: '#f1f5f9', textAlign: 'left' }}>
-                                <th style={{ padding: '8px' }}>Proceso</th>
-                                <th style={{ padding: '8px' }}>Criticidad</th>
-                                <th style={{ padding: '8px' }}>RTO (h)</th>
-                                <th style={{ padding: '8px' }}>RPO (h)</th>
-                                <th style={{ padding: '8px' }}>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sede.procesos && sede.procesos.length > 0 ? (
-                                sede.procesos.map(p => (
-                                    <tr key={p.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                        <td style={{ padding: '8px' }}>{p.nombre}</td>
-                                        <td style={{ padding: '8px' }}>
-                                            <span style={{
-                                                padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem', color: 'white',
-                                                backgroundColor: p.criticidad === 'Crítica' ? '#ef4444' : (p.criticidad === 'Alta' ? '#f97316' : '#3b82f6')
-                                            }}>
-                                                {p.criticidad}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: '8px' }}>{p.rto}</td>
-                                        <td style={{ padding: '8px' }}>{p.rpo}</td>
-                                        <td style={{ padding: '8px' }}>
-                                            <button onClick={() => handleEdit(p)} style={{ marginRight: '5px', background: 'none', border: 'none', cursor: 'pointer' }}>✏️</button>
-                                            <button onClick={() => handleDelete(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>🗑️</button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr><td colSpan="5" style={{ padding: '10px', textAlign: 'center' }}>No hay procesos registrados.</td></tr>
-                            )}
-                        </tbody>
-                    </table>
+            <div style={{
+                background: 'white',
+                width: '800px',
+                maxHeight: '90vh',
+                display: 'flex',
+                flexDirection: 'column',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}>
+                <div style={{ background: '#2563eb', padding: '15px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.25rem' }}>📋 Procesos de: {sede.nombre}</h2>
+                    <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'white' }}>&times;</button>
                 </div>
 
-                {/* Form */}
-                <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px' }}>
-                    <h4>{editingId ? 'Editar Proceso' : 'Agregar Proceso'}</h4>
-                    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '10px', gridTemplateColumns: '1fr 1fr' }}>
-                        <input
-                            placeholder="Nombre del Proceso"
-                            style={{ gridColumn: 'span 2', padding: '8px' }}
-                            value={form.nombre}
-                            onChange={e => setForm({ ...form, nombre: e.target.value })}
-                            required
-                        />
+                <div style={{ padding: '20px', overflowY: 'auto' }}>
+                    {/* List of Processes */}
+                    <div style={{ marginBottom: '20px', border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                            <thead>
+                                <tr style={{ background: '#f1f5f9', textAlign: 'left', borderBottom: '2px solid #e2e8f0', color: '#334155' }}>
+                                    <th style={{ padding: '12px', width: '30%' }}>Proceso</th>
+                                    <th style={{ padding: '12px', width: '20%' }}>Criticidad</th>
+                                    <th style={{ padding: '12px', width: '15%' }}>RTO (h)</th>
+                                    <th style={{ padding: '12px', width: '15%' }}>RPO (h)</th>
+                                    <th style={{ padding: '12px', width: '20%' }}>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sede.procesos && sede.procesos.length > 0 ? (
+                                    sede.procesos.map((p, idx) => (
+                                        <tr key={p.id} style={{ borderBottom: idx < sede.procesos.length - 1 ? '1px solid #e2e8f0' : 'none', background: 'white' }}>
+                                            <td style={{ padding: '12px', fontWeight: '500', color: '#0f172a' }}>{p.nombre}</td>
+                                            <td style={{ padding: '12px' }}>
+                                                <span style={{
+                                                    padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '600', display: 'inline-block',
+                                                    backgroundColor: p.criticidad === 'Crítica' ? '#fee2e2' : (p.criticidad === 'Alta' ? '#ffedd5' : (p.criticidad === 'Media' ? '#fef9c3' : '#dbeafe')),
+                                                    color: p.criticidad === 'Crítica' ? '#991b1b' : (p.criticidad === 'Alta' ? '#9a3412' : (p.criticidad === 'Media' ? '#854d0e' : '#1e40af')),
+                                                    border: `1px solid ${p.criticidad === 'Crítica' ? '#ef4444' : (p.criticidad === 'Alta' ? '#f97316' : (p.criticidad === 'Media' ? '#eab308' : '#3b82f6'))}`
+                                                }}>
+                                                    {p.criticidad}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '12px', color: '#64748b' }}><strong>{p.rto}</strong></td>
+                                            <td style={{ padding: '12px', color: '#64748b' }}><strong>{p.rpo}</strong></td>
+                                            <td style={{ padding: '12px' }}>
+                                                <button onClick={() => handleEdit(p)} style={{ marginRight: '8px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }} title="Editar">✏️</button>
+                                                <button onClick={() => handleDelete(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }} title="Eliminar">🗑️</button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr><td colSpan="5" style={{ padding: '20px', textAlign: 'center', fontStyle: 'italic', color: '#94a3b8' }}>No hay procesos registrados.</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
 
-                        <select
-                            value={form.criticidad}
-                            onChange={e => setForm({ ...form, criticidad: e.target.value })}
-                            style={{ padding: '8px' }}
-                        >
-                            <option value="Normal">Normal</option>
-                            <option value="Baja">Baja</option>
-                            <option value="Media">Media</option>
-                            <option value="Alta">Alta</option>
-                            <option value="Crítica">Crítica</option>
-                        </select>
+                    {/* Form */}
+                    <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <h4 style={{ margin: '0 0 15px 0', fontSize: '1.1rem', color: '#1e293b' }}>{editingId ? '✏️ Editar Proceso' : '➕ Agregar Nuevo Proceso'}</h4>
+                        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '15px', gridTemplateColumns: '1fr 1fr' }}>
+                            <div style={{ gridColumn: 'span 2' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', fontWeight: '500', color: '#475569' }}>Nombre del Proceso</label>
+                                <input
+                                    placeholder="Ej. Nómina, Facturación..."
+                                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                                    value={form.nombre}
+                                    onChange={e => setForm({ ...form, nombre: e.target.value })}
+                                    required
+                                />
+                            </div>
 
-                        <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                            <label>RTO:</label>
-                            <input type="number" value={form.rto} onChange={e => setForm({ ...form, rto: e.target.value })} style={{ width: '80px', padding: '5px' }} />
-                        </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', fontWeight: '500', color: '#475569' }}>Criticidad</label>
+                                <select
+                                    value={form.criticidad}
+                                    onChange={e => setForm({ ...form, criticidad: e.target.value })}
+                                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white' }}
+                                >
+                                    <option value="Normal">Normal</option>
+                                    <option value="Baja">Baja</option>
+                                    <option value="Media">Media</option>
+                                    <option value="Alta">Alta</option>
+                                    <option value="Crítica">Crítica</option>
+                                </select>
+                            </div>
 
-                        <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                            <label>RPO:</label>
-                            <input type="number" value={form.rpo} onChange={e => setForm({ ...form, rpo: e.target.value })} style={{ width: '80px', padding: '5px' }} />
-                        </div>
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', fontWeight: '500', color: '#475569' }}>RTO (Horas)</label>
+                                    <input type="number" value={form.rto} onChange={e => setForm({ ...form, rto: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', fontWeight: '500', color: '#475569' }}>RPO (Horas)</label>
+                                    <input type="number" value={form.rpo} onChange={e => setForm({ ...form, rpo: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                                </div>
+                            </div>
 
-                        <button
-                            type="submit"
-                            className="btn btn-primary"
-                            style={{ gridColumn: 'span 2', marginTop: '10px' }}
-                        >
-                            {editingId ? 'Actualizar Proceso' : 'Agregar Proceso'}
-                        </button>
-                    </form>
+                            <button
+                                type="submit"
+                                style={{
+                                    gridColumn: 'span 2',
+                                    padding: '12px',
+                                    marginTop: '10px',
+                                    background: editingId ? '#f59e0b' : '#2563eb',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    transition: 'background 0.2s'
+                                }}
+                            >
+                                {editingId ? 'Actualizar Proceso' : 'Agregar Proceso'}
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

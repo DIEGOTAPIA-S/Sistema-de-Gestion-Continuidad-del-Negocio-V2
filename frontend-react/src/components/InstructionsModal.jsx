@@ -100,7 +100,7 @@ const InstructionsModal = ({ onClose }) => {
                             <li style={{ marginBottom: '15px', display: 'flex', gap: '10px' }}>
                                 <span style={{ fontSize: '1.2rem' }}>📋</span>
                                 <div>
-                                    <strong style={{ color: '#334155', fontSize: '0.95rem' }}>Sedes Totales</strong>
+                                    <strong style={{ color: '#334155', fontSize: '0.95rem' }}>Sedes</strong>
                                     <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
                                         Abre un listado completo de todas las sedes monitoreadas con su estado actual (Operativa, Afectada, Cercana).
                                     </p>
