@@ -11,6 +11,8 @@ import { getSedes } from '../services/sedeService';
 import { createEvento } from '../services/eventoService';
 import { generatePDFReport } from '../utils/reportGenerator';
 import { toPng } from 'html-to-image';
+import EarthquakeLayer from '../components/EarthquakeLayer'; // Importar capa de sismos
+import WeatherLayer from '../components/WeatherLayer'; // Importar capa de clima
 
 const MapDashboard = () => {
     const { user, logout } = useAuth();
@@ -26,6 +28,25 @@ const MapDashboard = () => {
     const [showCharts, setShowCharts] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
     const [showList, setShowList] = useState(false);
+
+    // Layers Logic
+    const [showEarthquakes, setShowEarthquakes] = useState(false);
+    const [showWeather, setShowWeather] = useState(false); // Weather Layer State
+    const [earthquakeAlerts, setEarthquakeAlerts] = useState([]);
+    const [emergencyAlert, setEmergencyAlert] = useState(null); // State for the popup
+    const [focusLocation, setFocusLocation] = useState(null); // State for map FlyTo
+
+    useEffect(() => {
+        if (earthquakeAlerts.length > 0) {
+            // Check for ANY events (Mag > 2.0) in the last hour
+            // Lowered threshold as requested by user
+            const critical = earthquakeAlerts.find(a => a.mag >= 2.0 && (Date.now() - a.time) < 3600000);
+            if (critical) {
+                setEmergencyAlert(critical);
+                setShowEarthquakes(true); // Auto-show layer
+            }
+        }
+    }, [earthquakeAlerts]);
 
     useEffect(() => {
         getSedes()
@@ -204,6 +225,32 @@ const MapDashboard = () => {
                     onShowHistory={() => setShowHistory(true)}
                     onToggleCharts={() => setShowCharts(!showCharts)}
                     showCharts={showCharts}
+
+                    // Layers Props
+                    onToggleEarthquakes={() => setShowEarthquakes(!showEarthquakes)}
+                    showEarthquakes={showEarthquakes}
+                    earthquakeAlerts={earthquakeAlerts}
+                    onSimulateAlert={() => {
+                        const mocks = [
+                            { mag: 5.8, place: "Simulacro: 10km al Norte de Bogotá", coords: [4.81, -74.07] },
+                            { mag: 6.2, place: "Simulacro: Volcán Galeras, Pasto", coords: [1.22, -77.37] },
+                            { mag: 4.9, place: "Simulacro: Mesa de los Santos, Santander", coords: [6.79, -73.12] },
+                            { mag: 5.5, place: "Simulacro: El Calvario, Meta (Epicentro Común)", coords: [4.36, -73.70] },
+                            { mag: 6.0, place: "Simulacro: Costa Pacífica, Chocó", coords: [5.71, -77.27] },
+                            { mag: 5.2, place: "Simulacro: Volcán Nevado del Huila", coords: [2.93, -76.03] },
+                            { mag: 5.7, place: "Simulacro: Zona de Fallas, Armenia", coords: [4.53, -75.68] },
+                            { mag: 4.5, place: "Simulacro: Sierra Nevada, Santa Marta", coords: [10.85, -73.80] }
+                        ];
+                        const randomMock = mocks[Math.floor(Math.random() * mocks.length)];
+                        setEmergencyAlert({
+                            mag: randomMock.mag,
+                            place: randomMock.place,
+                            time: Date.now(),
+                            coordinates: [randomMock.coords[1], randomMock.coords[0]] // Store as [Lon, Lat] to match GeoJSON
+                        });
+                    }}
+                    onToggleWeather={() => setShowWeather(!showWeather)}
+                    showWeather={showWeather}
                 />
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', height: '100%', padding: '20px', gap: '20px' }}>
@@ -218,7 +265,11 @@ const MapDashboard = () => {
                         <MapComponent
                             sedes={filteredSedes}
                             onAnalysisUpdate={handleAnalysisUpdate}
-                        />
+                            focusLocation={focusLocation}
+                        >
+                            <EarthquakeLayer visible={showEarthquakes} onAlertsUpdate={setEarthquakeAlerts} />
+                            <WeatherLayer visible={showWeather} sedes={sedes} />
+                        </MapComponent>
                     </div>
 
                     {/* Event Summary Box (Above Charts) */}
@@ -247,6 +298,52 @@ const MapDashboard = () => {
 
             {showHistory && <EventHistoryModal onClose={() => setShowHistory(false)} />}
             {showList && <SedeListModal sedes={sedesWithStatus} onClose={() => setShowList(false)} />}
+
+            {/* Emergency Popup Overlay */}
+            {emergencyAlert && (
+                <div style={{ position: 'fixed', bottom: '20px', right: '20px', background: '#fff', borderLeft: '6px solid #dc2626', padding: '20px', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', zIndex: 9999, maxWidth: '400px', animation: 'slideIn 0.5s ease-out' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
+                        <h2 style={{ margin: 0, color: '#dc2626', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            🚨 ALERTA SÍSMICA
+                        </h2>
+                        <button onClick={() => setEmergencyAlert(null)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#64748b' }}>×</button>
+                    </div>
+                    <p style={{ margin: '0 0 10px 0', fontSize: '1rem', color: '#1e293b' }}>
+                        Se ha detectado un sismo importante recientemente.
+                    </p>
+                    <div style={{ background: '#fef2f2', padding: '10px', borderRadius: '6px', marginBottom: '10px' }}>
+                        <p style={{ margin: 0, fontWeight: 'bold', color: '#991b1b' }}>Magnitud {emergencyAlert.mag}</p>
+                        <p style={{ margin: 0, color: '#b91c1c', fontSize: '0.9rem' }}>{emergencyAlert.place}</p>
+                    </div>
+                    <button
+                        onClick={() => {
+                            setShowEarthquakes(true);
+
+                            let targetCoords = [4.71, -74.07]; // Default Bogota
+
+                            if (emergencyAlert.place.includes("Simulacro")) {
+                                // For mocks, we need to find the coords we set or infer them
+                                if (emergencyAlert.place.includes("Bogotá")) targetCoords = [4.81, -74.07];
+                                else if (emergencyAlert.place.includes("Pasto")) targetCoords = [1.22, -77.37];
+                                else if (emergencyAlert.place.includes("Santander")) targetCoords = [6.79, -73.12];
+                            } else if (emergencyAlert.coordinates) {
+                                // Leaflet needs [Lat, Lon]. GeoJSON is [Lon, Lat, Depth]
+                                targetCoords = [emergencyAlert.coordinates[1], emergencyAlert.coordinates[0]];
+                            }
+
+                            console.log("Setting focus to:", targetCoords);
+                            setFocusLocation({ coords: targetCoords, timestamp: Date.now() });
+                            setEmergencyAlert(null);
+                        }}
+                        style={{ width: '100%', background: '#dc2626', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                    >
+                        Ver en Mapa
+                    </button>
+                    <style>{`
+                        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+                    `}</style>
+                </div>
+            )}
         </div>
     );
 };

@@ -9,7 +9,13 @@ const Sidebar = ({
     onShowList,
     onShowHistory,
     onToggleCharts,
-    showCharts
+    showCharts,
+    onToggleEarthquakes, // New prop
+    showEarthquakes,     // New prop
+    earthquakeAlerts = [], // New prop: List of alert strings/objects
+    onSimulateAlert, // New prop: Function to trigger mock alert
+    onToggleWeather, // New prop
+    showWeather      // New prop
 }) => {
     const [eventDetails, setEventDetails] = useState({
         description: '',
@@ -42,6 +48,20 @@ const Sidebar = ({
                 <button onClick={onToggleCharts} className={`btn-sidebar ${showCharts ? 'active' : ''}`}>
                     📊 {showCharts ? 'Ocultar' : 'Métricas'}
                 </button>
+                <div style={{ display: 'flex', gap: '5px' }}>
+                    <button onClick={onToggleEarthquakes} className={`btn-sidebar ${showEarthquakes ? 'active-red' : ''}`} style={{ flex: 1 }}>
+                        ⚡ {showEarthquakes ? 'Ocultar' : 'Sismos'}
+                    </button>
+                    {showEarthquakes && (
+                        <button onClick={onSimulateAlert} className="btn-sidebar" style={{ width: '40px', padding: '0', fontSize: '1.2rem' }} title="Simular Alerta">
+                            🔔
+                        </button>
+                    )}
+                </div>
+
+                <button onClick={onToggleWeather} className={`btn-sidebar ${showWeather ? 'active-blue' : ''}`}>
+                    ☁️ {showWeather ? 'Ocultar Clima' : 'Clima'}
+                </button>
                 <button onClick={onGenerateReport} className="btn-sidebar btn-green" disabled={affectedSedes.length === 0}>
                     📥 PDF
                 </button>
@@ -51,6 +71,28 @@ const Sidebar = ({
             </div>
 
             <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
+
+                {/* Seismic Alerts Panel - THE "TEXT BOX" USER REQUESTED */}
+                {showEarthquakes && (
+                    <div style={{ marginBottom: '20px', background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '8px', padding: '15px' }}>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#881337', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            ⚠️ Alertas Sísmicas (24h)
+                        </h4>
+                        {earthquakeAlerts.length > 0 ? (
+                            <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem' }}>
+                                {earthquakeAlerts.slice(0, 5).map((alert, idx) => (
+                                    <li key={idx} style={{ padding: '8px 0', borderBottom: idx < 4 ? '1px solid #ffe4e6' : 'none', color: '#be123c' }}>
+                                        <strong>M {alert.mag}</strong> - {alert.place} <br />
+                                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>Hace {Math.round((Date.now() - alert.time) / (1000 * 60 * 60))} horas</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p style={{ fontSize: '0.85rem', color: '#9f1239', margin: 0 }}>Sin sismos mayores recientes.</p>
+                        )}
+                    </div>
+                )}
+
                 <h3 style={{ fontSize: '1rem', marginBottom: '15px', color: '#64748b' }}>📝 Detalles del Evento</h3>
 
                 <div style={{ marginBottom: '15px' }}>
@@ -106,6 +148,9 @@ const Sidebar = ({
                 }
                 .btn-sidebar:hover { background: #f1f5f9; border-color: #94a3b8; }
                 .btn-sidebar.active { background: #2563eb; color: white; border-color: #2563eb; }
+                .btn-sidebar.active-red { background: #e11d48; color: white; border-color: #e11d48; animation: pulse 2s infinite; }
+                .btn-sidebar.active-blue { background: #0ea5e9; color: white; border-color: #0ea5e9; }
+                @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(225, 29, 72, 0); } 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); } }
                 .btn-sidebar.btn-green { background: #10b981; color: white; border: none; }
                 .btn-sidebar.btn-green:hover { background: #059669; }
                 .btn-sidebar.btn-green:disabled { background: #a7f3d0; cursor: not-allowed; }
