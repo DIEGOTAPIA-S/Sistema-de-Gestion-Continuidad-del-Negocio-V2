@@ -210,7 +210,7 @@ const MapDashboard = () => {
             <header style={{ height: '64px', background: '#2563eb', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', zIndex: 1000 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{ background: 'white', borderRadius: '50%', padding: '5px', height: '32px', width: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ fontSize: '1.2rem' }}>🏥</span>
+                        <span style={{ fontSize: '1.2rem' }}>🛡️</span>
                     </div>
                     <div>
                         <h1 style={{ fontSize: '1.25rem', margin: 0, fontWeight: '700' }}>Sistema de Gestión Continuidad del Negocio</h1>

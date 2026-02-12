@@ -43,7 +43,7 @@ const Login = () => {
                 <div className="w-full max-w-sm mx-auto">
                     <div className="mb-8">
                         <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-2xl mb-5 text-white shadow-lg shadow-blue-500/50">
-                            🏥
+                            🛡️
                         </div>
                         <h2 className="text-3xl font-bold text-slate-900 mb-2">Bienvenido</h2>
                         <p className="text-slate-500">Ingrese sus credenciales para acceder al panel.</p>
