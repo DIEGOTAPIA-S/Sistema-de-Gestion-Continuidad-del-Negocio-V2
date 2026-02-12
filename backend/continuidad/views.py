@@ -77,5 +77,43 @@ class EventoViewSet(viewsets.ModelViewSet):
         # Leer/Editar: Autenticado
         return [permissions.IsAuthenticated()]
 
-    def perform_create(self, serializer):
-        serializer.save(creado_por=self.request.user)
+
+from rest_framework.decorators import api_view, permission_classes
+import feedparser
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_news(request):
+    """
+    Proxy para obtener noticias de Google News RSS.
+    Parametros: q (busqueda), por defecto 'Colombia Movilidad'
+    """
+    query = request.GET.get('q', 'Colombia Movilidad')
+    # Codificar query para URL
+    from urllib.parse import quote
+    encoded_query = quote(query)
+    
+    rss_url = f"https://news.google.com/rss/search?q={encoded_query}&hl=es-419&gl=CO&ceid=CO:es-419"
+    
+    print(f"Fetching RSS: {rss_url}") # DEBUG LOG
+    
+    feed = feedparser.parse(rss_url)
+    
+    print(f"Found {len(feed.entries)} entries") # DEBUG LOG
+
+    news_items = []
+    for entry in feed.entries[:20]: # Limit 20
+        # Limpiar resumen (a veces trae HTML)
+        summary = entry.summary if 'summary' in entry else ''
+        from django.utils.html import strip_tags
+        clean_summary = strip_tags(summary)[:200] + '...' if len(summary) > 200 else strip_tags(summary)
+
+        news_items.append({
+            'title': entry.title,
+            'link': entry.link,
+            'published': entry.published,
+            'source': entry.source.title if 'source' in entry else 'Google News',
+            'summary': clean_summary
+        })
+        
+    return Response(news_items)

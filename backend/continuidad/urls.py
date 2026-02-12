@@ -10,4 +10,5 @@ router.register(r'users', views.UserViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('news/', views.get_news, name='news'),
 ]

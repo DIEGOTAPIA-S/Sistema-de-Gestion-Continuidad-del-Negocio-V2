@@ -13,23 +13,37 @@ import { generatePDFReport } from '../utils/reportGenerator';
 import { toPng } from 'html-to-image';
 import EarthquakeLayer from '../components/EarthquakeLayer'; // Importar capa de sismos
 import WeatherLayer from '../components/WeatherLayer'; // Importar capa de clima
+import NewsFeed from '../components/NewsFeed'; // Importar componente de noticias
 import InstructionsModal from '../components/InstructionsModal'; // Importar modal de instrucciones
+import EventRegistrationPanel from '../components/EventRegistrationPanel'; // Importar nuevo panel de eventos
 
 const MapDashboard = () => {
     const { user, logout } = useAuth();
+
+    // Nueva gestión de estado para el formulario de eventos (Elevado desde Sidebar)
+    const [eventDetails, setEventDetails] = useState({
+        description: '',
+        type: 'Sismo',
+    });
+
+    const handleEventChange = (e) => {
+        const { name, value } = e.target;
+        setEventDetails(prev => ({ ...prev, [name]: value }));
+    };
     const [sedes, setSedes] = useState([]);
     const [filteredSedes, setFilteredSedes] = useState([]);
 
     // Analysis State
+    // Analysis State
     const [zones, setZones] = useState([]);
     const [affectedSedes, setAffectedSedes] = useState([]);
     const [nearbySedes, setNearbySedes] = useState([]);
-    const [eventDetails, setEventDetails] = useState({ description: '', type: 'Sismo' });
 
     const [showCharts, setShowCharts] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
     const [showList, setShowList] = useState(false);
     const [showHelp, setShowHelp] = useState(false); // Help Modal State
+    const [showNews, setShowNews] = useState(false); // News Feed State
 
     // Layers Logic
     const [showEarthquakes, setShowEarthquakes] = useState(false);
@@ -95,10 +109,6 @@ const MapDashboard = () => {
         setAffectedSedes(affected);
         setNearbySedes(nearby);
         if (currentZones) setZones(currentZones);
-    };
-
-    const handleEventChange = (details) => {
-        setEventDetails(details);
     };
 
     const handleGenerateReport = async () => {
@@ -212,24 +222,32 @@ const MapDashboard = () => {
                         <span style={{ fontWeight: '600', fontSize: '0.9rem', display: 'block' }}>Bienvenido, {user?.name}</span>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{user?.role}</span>
                     </div>
-                    {user?.role === 'admin' && <button onClick={() => window.location.href = '/admin'} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'white', fontSize: '1.2rem' }}>⚙️</button>}
-                    <button onClick={logout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'white', fontSize: '1.2rem' }}>🚪</button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        {user?.role === 'admin' && (
+                            <a href="/admin" style={{ textDecoration: 'none' }}>
+                                <button style={{ background: '#1e40af', border: '1px solid #1e3a8a', color: 'white', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    🛠️ Admin
+                                </button>
+                            </a>
+                        )}
+                        <button onClick={logout} style={{ background: '#dc2626', border: '1px solid #b91c1c', color: 'white', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            🚪 Salir
+                        </button>
+                    </div>
                 </div>
             </header>
 
-            <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
                 <Sidebar
-                    onEventChange={handleEventChange}
+                    onEventChange={() => { }}
                     affectedSedes={affectedSedes}
                     nearbySedes={nearbySedes}
-                    onSave={handleSaveEvent}
+                    onSave={() => handleSaveEvent(eventDetails)}
                     onGenerateReport={handleGenerateReport}
                     onShowList={() => setShowList(true)}
                     onShowHistory={() => setShowHistory(true)}
                     onToggleCharts={() => setShowCharts(!showCharts)}
                     showCharts={showCharts}
-
-                    // Layers Props
                     onToggleEarthquakes={() => setShowEarthquakes(!showEarthquakes)}
                     showEarthquakes={showEarthquakes}
                     earthquakeAlerts={earthquakeAlerts}
@@ -257,17 +275,18 @@ const MapDashboard = () => {
                     onToggleTraffic={() => setShowTraffic(!showTraffic)}
                     showTraffic={showTraffic}
                     onShowHelp={() => setShowHelp(true)}
+                    onToggleNews={() => setShowNews(!showNews)}
+                    showNews={showNews}
                 />
 
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', height: '100%', padding: '20px', gap: '20px' }}>
+                {/* Right Content Area (Scrollable) */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', position: 'relative' }}>
 
-                    {/* Search & Filter */}
-                    <div style={{ zIndex: 10 }}>
-                        <FilterControl onFilter={handleFilter} />
-                    </div>
+                    {/* News Feed Overlay */}
+                    {showNews && <NewsFeed onClose={() => setShowNews(false)} />}
 
-                    {/* Map */}
-                    <div id="map-capture" style={{ height: '500px', flexShrink: 0, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', position: 'relative' }}>
+                    {/* Map Container (65% Height / Min 500px) */}
+                    <div id="map-capture" style={{ height: '65vh', minHeight: '500px', flexShrink: 0, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', position: 'relative' }}>
                         <MapComponent
                             sedes={filteredSedes}
                             onAnalysisUpdate={handleAnalysisUpdate}
@@ -316,9 +335,24 @@ const MapDashboard = () => {
                         )}
                     </div>
 
+                    {/* Event Registration Panel (Below Map) */}
+                    <div style={{ padding: '20px', background: '#f8fafc' }}>
+                        <EventRegistrationPanel
+                            eventDetails={eventDetails}
+                            onChange={handleEventChange} // Correct prop name: onChange
+                            onSave={handleSaveEvent}
+                        />
+                        {/* Helper to fix prop name: EventRegistrationPanel uses eventDetails and onEventChange directly?
+                                        Checking previous code view of EventRegistrationPanel... yes.
+                                        Wait, I removed handleEventChange function globally!
+                                        So I need to pass (e) => setEventDetails(...) or re-add the simple setter.
+                                    */}
+                    </div>
+
+
                     {/* Event Summary Box (Above Charts) */}
                     {(affectedSedes.length > 0 || nearbySedes.length > 0) && (
-                        <div style={{ background: 'white', padding: '15px', borderRadius: '8px', borderLeft: '5px solid #2563eb', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                        <div style={{ margin: '0 20px', background: 'white', padding: '15px', borderRadius: '8px', borderLeft: '5px solid #2563eb', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                             <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#0f172a' }}>
                                 📢 Resumen del Evento: <span style={{ color: '#2563eb' }}>{eventDetails.type}</span>
                             </h3>
@@ -330,12 +364,12 @@ const MapDashboard = () => {
 
                     {/* Charts & Details */}
                     {showCharts && (
-                        <>
+                        <div style={{ padding: '20px' }}>
                             <div id="charts-capture">
                                 <DashboardCharts sedes={sedesWithStatus} />
                             </div>
                             <AffectedListTable affectedSedes={affectedSedes} nearbySedes={nearbySedes} />
-                        </>
+                        </div>
                     )}
                 </div>
             </div>

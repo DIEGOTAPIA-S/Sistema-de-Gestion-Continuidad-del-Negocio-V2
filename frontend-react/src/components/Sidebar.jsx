@@ -18,7 +18,9 @@ const Sidebar = ({
     showWeather,      // New prop
     onToggleTraffic, // New prop
     showTraffic,      // New prop
-    onShowHelp       // New prop
+    onShowHelp,       // New prop
+    onToggleNews,    // New prop
+    showNews         // New prop
 }) => {
     const [eventDetails, setEventDetails] = useState({
         description: '',
@@ -79,20 +81,18 @@ const Sidebar = ({
                     📥 PDF
                 </button>
 
-                {/* Help Button - Moved here to complete grid (4th Row) */}
                 <button onClick={onShowHelp} className="btn-sidebar" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569' }}>
                     ❓ Ayuda
                 </button>
 
-                {/* Save Button - Full Width at Bottom (5th Row) */}
-                <button onClick={onSave} className="btn-sidebar btn-dark" style={{ gridColumn: '1 / -1' }}>
-                    💾 Guardar
+                <button onClick={onToggleNews} className={`btn-sidebar ${showNews ? 'active' : ''}`} style={{ background: showNews ? '#e0f2fe' : 'white', color: showNews ? '#0284c7' : 'inherit', border: showNews ? '1px solid #7dd3fc' : '1px solid #e2e8f0' }}>
+                    📰 Noticias
                 </button>
             </div>
 
             <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
 
-                {/* Seismic Alerts Panel - THE "TEXT BOX" USER REQUESTED */}
+                {/* Seismic Alerts Panel */}
                 {showEarthquakes && (
                     <div style={{ marginBottom: '20px', background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '8px', padding: '15px' }}>
                         <h4 style={{ margin: '0 0 10px 0', color: '#881337', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -112,42 +112,6 @@ const Sidebar = ({
                         )}
                     </div>
                 )}
-
-                <h3 style={{ fontSize: '1rem', marginBottom: '15px', color: '#64748b' }}>📝 Detalles del Evento</h3>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '0.9rem' }}>Tipo de Evento</label>
-                    <select
-                        name="type"
-                        value={eventDetails.type}
-                        onChange={handleChange}
-                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-                    >
-                        <option value="Sismo">Sismo</option>
-                        <option value="Inundación">Inundación</option>
-                        <option value="Incendio">Incendio</option>
-                        <option value="Protesta">Protesta Social</option>
-                        <option value="Otro">Otro</option>
-                    </select>
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '0.9rem' }}>Descripción</label>
-                    <textarea
-                        name="description"
-                        value={eventDetails.description}
-                        onChange={handleChange}
-                        rows="4"
-                        placeholder="Describa el evento..."
-                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', resize: 'vertical' }}
-                    />
-                </div>
-
-                <div style={{ marginTop: 'auto', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                    <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
-                        Use los controles de dibujo en el mapa para seleccionar las zonas afectadas.
-                    </p>
-                </div>
             </div>
 
             <style>{`
