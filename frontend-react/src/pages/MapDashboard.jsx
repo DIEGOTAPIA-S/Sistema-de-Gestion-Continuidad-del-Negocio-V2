@@ -23,7 +23,7 @@ const MapDashboard = () => {
     // Nueva gestión de estado para el formulario de eventos (Elevado desde Sidebar)
     const [eventDetails, setEventDetails] = useState({
         description: '',
-        type: 'Sismo',
+        type: 'Servicios Públicos',
     });
 
     const handleEventChange = (e) => {

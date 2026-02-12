@@ -17,11 +17,12 @@ const EventRegistrationPanel = ({ eventDetails, onChange, onSave }) => {
                             onChange={onChange}
                             style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#f8fafc' }}
                         >
-                            <option value="Sismo">🌋 Sismo</option>
-                            <option value="Inundación">💧 Inundación</option>
-                            <option value="Incendio">🔥 Incendio</option>
-                            <option value="Protesta">📢 Protesta Social</option>
-                            <option value="Bloqueo">🛑 Bloqueo Vial</option>
+                            <option value="Servicios Públicos">💡 Interrupción Servicios Públicos</option>
+                            <option value="Manifestación">📢 Manifestación Social</option>
+                            <option value="Bloqueo Vial">🛑 Bloqueo Vial o Movilidad</option>
+                            <option value="Físico Ambiental">🌪️ Físico-Ambiental (Incendios, Inundaciones)</option>
+                            <option value="Terrorismo">💣 Acto de Terrorismo</option>
+                            <option value="Incidente Operativo">⚙️ Incidente Operativo</option>
                             <option value="Otro">❓ Otro</option>
                         </select>
                     </div>
