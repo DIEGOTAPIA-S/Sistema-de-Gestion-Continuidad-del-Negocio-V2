@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'; // Added useMap
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import * as turf from '@turf/turf';
@@ -13,7 +13,23 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 let DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-const MapComponent = ({ sedes, onAnalysisUpdate }) => {
+// Internal component to handle programmatic map movements
+const MapController = ({ focusLocation }) => {
+    const map = useMap();
+    useEffect(() => {
+        console.log("MapController received focusLocation:", focusLocation);
+        if (focusLocation && focusLocation.coords) {
+            console.log("Flying to:", focusLocation.coords);
+            map.flyTo(focusLocation.coords, 8, { // Zoom 8 is good for regional context
+                animate: true,
+                duration: 2
+            });
+        }
+    }, [focusLocation, map]);
+    return null;
+};
+
+const MapComponent = ({ sedes, onAnalysisUpdate, children, focusLocation }) => {
     const [analyzedSedes, setAnalyzedSedes] = useState([]);
     const [zones, setZones] = useState([]);
 
@@ -80,11 +96,13 @@ const MapComponent = ({ sedes, onAnalysisUpdate }) => {
     return (
         <div className="card" style={{ height: '100%', width: '100%', padding: 0, overflow: 'hidden', borderRadius: '0' }}>
             <MapContainer center={[4.6097, -74.0817]} zoom={6} style={{ height: '100%', width: '100%' }} preferCanvas={true}>
+                <MapController focusLocation={focusLocation} />
                 <SearchControl />
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                {children}
                 <MapDrawControl onCreated={handleZoneCreated} onDeleted={handleZoneDeleted} />
 
                 {(analyzedSedes.length > 0 ? analyzedSedes : sedes).map((sede) => (
