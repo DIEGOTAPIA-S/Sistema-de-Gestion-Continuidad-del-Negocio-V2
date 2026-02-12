@@ -1,4 +1,4 @@
-# 🛠️ Documentación Técnica - Sistema BIA (v2.0)
+# 🛠️ Documentación Técnica - Sistema BIA (v2.5)
 
 Documentación dirigida a desarrolladores y administradores de sistemas.
 
@@ -6,14 +6,15 @@ Documentación dirigida a desarrolladores y administradores de sistemas.
 
 ## 🏗️ Arquitectura del Sistema
 
-El sistema sigue una arquitectura cliente-servidor desacoplada:
+El sistema sigue una arquitectura moderna de **Single Page Application (SPA)**:
 
-*   **Frontend (SPA)**: HTML5, CSS3, JavaScript (Vanilla).
-    *   Librerías: Leaflet.js (Mapas), Chart.js (Gráficas), jsPDF (Reportes).
-    *   Comunicación: Fetch API hacia el Backend.
-*   **Backend (API REST)**: Django 5 + Django REST Framework.
+*   **Frontend**: React 18 + Vite.
+    *   Estilos: CSS Moderno (Variables CSS) / TailwindCSS (Opcional).
+    *   Mapas: React-Leaflet + Turf.js para análisis geoespacial.
+    *   Estado: Context API + Hooks.
+*   **Backend (API REST)**: Python Django 5 + Django REST Framework.
     *   Autenticación: JWT (JSON Web Tokens).
-    *   Base de Datos: SQLite (Nativo), compatible con PostgreSQL.
+    *   Base de Datos: SQLite (Desarrollo) / PostgreSQL (Producción).
 
 ---
 
@@ -21,61 +22,48 @@ El sistema sigue una arquitectura cliente-servidor desacoplada:
 
 ```text
 /
-├── backend/                # Proyecto Django
-│   ├── config/             # Configuración global (settings.py, urls.py)
-│   ├── continuidad/        # App principal (Modelos, Vistas, Serializers)
-│   ├── venv/               # Entorno Virtual Python
-│   └── manage.py           # CLI de Django
-├── frontend/               # Cliente Web
-│   ├── css/                # Estilos
-│   ├── js/                 # Lógica (map.js)
-│   ├── index.html          # Dashboard
-│   └── login.html          # Acceso
-└── _VERSION_ANTERIOR.../   # Backup legacy
+├── backend/                # API Django
+│   ├── continuidad/        # Aplicación principal (Modelos, Vistas)
+│   ├── config/             # Configuración del proyecto
+│   └── manage.py           # Gestor de Django
+├── frontend-react/         # Cliente React (Nuevo)
+│   ├── src/
+│   │   ├── components/     # Componentes reutilizables
+│   │   ├── pages/          # Vistas principales
+│   │   ├── services/       # Comunicación con API (Axios)
+│   │   └── context/        # Estado global (Auth)
+│   ├── public/             # Assets estáticos
+│   └── vite.config.js      # Configuración de Build
+└── ...                     # Archivos de configuración
 ```
+
+> **Nota**: La carpeta `frontend` (sin el sufijo `-react`) pertenece a una versión anterior y puede ser eliminada.
 
 ---
 
 ## 🚀 Despliegue (Deployment)
 
-### Requisitos del Servidor
-*   Python 3.10 o superior.
-*   Servidor Web (Nginx/Apache) para servir el Frontend y hacer proxy al Backend.
-*   Gunicorn (para ejecutar Django en producción).
+### Requisitos
+*   Node.js v18+
+*   Python 3.10+
 
-### Pasos de Instalación
+### Instalación
 
-1.  **Clonar Repositorio**:
-    ```bash
-    git clone https://github.com/DIEGOTAPIA-S/Sistema-de-Gestion-Continuidad-del-Negocio-V2.git
-    ```
-
-2.  **Backend Setup**:
+1.  **Backend**:
     ```bash
     cd backend
     python -m venv venv
-    ./venv/Scripts/activate  # o source venv/bin/activate en Linux
-    pip install -r requirements.txt (generar previamente)
+    ./venv/Scripts/activate
+    pip install -r requirements.txt
     python manage.py migrate
-    python manage.py import_seed  # Carga datos iniciales
+    python manage.py runserver
     ```
 
-3.  **Configuración de Producción (`settings.py`)**:
-    *   Cambiar `DEBUG = False`.
-    *   Configurar `ALLOWED_HOSTS = ['midominio.com']`.
-    *   Configurar Base de Datos (PostgreSQL recomendado).
+2.  **Frontend**:
+    ```bash
+    cd frontend-react
+    npm install
+    npm run dev
+    ```
 
----
-
-## 🔌 API Endpoints
-
-Todos los endpoints están prefijados con `/api/`.
-
-| Método | Endpoint | Descripción | Auth |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/token/` | Obtener Token JWT (Login). | No |
-| `POST` | `/api/token/refresh/` | Refrescar Token. | No |
-| `GET` | `/api/sedes/` | Listar todas las sedes. | Sí |
-| `POST` | `/api/sedes/` | Crear nueva sede. | Admin |
-| `GET` | `/api/eventos/` | Historial de incidentes. | Sí |
-| `GET` | `/api/users/` | Listar usuarios. | Admin |
+El frontend estará disponible en `http://localhost:5173` y consumirá la API en `http://127.0.0.1:8000`.

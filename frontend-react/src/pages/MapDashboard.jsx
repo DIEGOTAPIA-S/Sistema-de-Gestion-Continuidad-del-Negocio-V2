@@ -10,7 +10,7 @@ import AffectedListTable from '../components/AffectedListTable'; // New Componen
 import { getSedes } from '../services/sedeService';
 import { createEvento } from '../services/eventoService';
 import { generatePDFReport } from '../utils/reportGenerator';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 
 const MapDashboard = () => {
     const { user, logout } = useAuth();
@@ -86,23 +86,46 @@ const MapDashboard = () => {
             const mapElement = document.getElementById('map-capture');
             let mapImg = null;
             if (mapElement) {
-                mapImg = await html2canvas(mapElement, { useCORS: true, loading: 'lazy' }).then(canvas => canvas.toDataURL('image/png'));
+                // Wait a moment for map to settle
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                try {
+                    // Using html-to-image which handles modern CSS (like oklch) better
+                    mapImg = await toPng(mapElement, {
+                        cacheBust: true,
+                        width: mapElement.offsetWidth,
+                        height: mapElement.offsetHeight,
+                        // Avoid issues with webgl/canvas tainting
+                        filter: (node) => !node.classList?.contains('leaflet-control-container')
+                    });
+                } catch (mapErr) {
+                    console.error("Error capturing Map:", mapErr);
+                    alert(`Error captura Mapa (html-to-image): ${mapErr.message}`);
+                }
+            } else {
+                alert("Error: No se encontró el elemento del mapa en el DOM.");
             }
 
             // Capture Charts
             const chartsElement = document.getElementById('charts-capture');
             let chartsImg = null;
-            if (chartsElement && showCharts) {
-                chartsImg = await html2canvas(chartsElement, { scale: 1 }).then(canvas => canvas.toDataURL('image/png'));
+            if (showCharts) {
+                if (chartsElement) {
+                    try {
+                        chartsImg = await toPng(chartsElement, { backgroundColor: '#ffffff' });
+                    } catch (chartErr) {
+                        console.error("Error capturing Charts:", chartErr);
+                        alert(`Error captura Gráficas: ${chartErr.message}`);
+                    }
+                } else {
+                    alert("Advertencia: Gráficas activas pero no encontradas para captura.");
+                }
             }
 
             generatePDFReport(reportSedes, affectedSedes, nearbySedes, eventDetails, user, mapImg, chartsImg);
         } catch (error) {
-            console.error("Error capturing screenshots:", error);
-            alert("Error al capturar imágenes para el reporte. Se generará sin imágenes.");
-            // Fallback generation without images
-            const reportSedes = updatedSedesWithStatus();
-            generatePDFReport(reportSedes, affectedSedes, nearbySedes, eventDetails, user, null, null);
+            console.error("Error generating report:", error);
+            alert("Error general al generar el reporte: " + error.message);
         }
     };
 

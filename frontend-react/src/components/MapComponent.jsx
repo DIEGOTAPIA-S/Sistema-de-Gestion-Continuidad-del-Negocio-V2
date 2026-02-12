@@ -79,7 +79,7 @@ const MapComponent = ({ sedes, onAnalysisUpdate }) => {
 
     return (
         <div className="card" style={{ height: '100%', width: '100%', padding: 0, overflow: 'hidden', borderRadius: '0' }}>
-            <MapContainer center={[4.6097, -74.0817]} zoom={6} style={{ height: '100%', width: '100%' }}>
+            <MapContainer center={[4.6097, -74.0817]} zoom={6} style={{ height: '100%', width: '100%' }} preferCanvas={true}>
                 <SearchControl />
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
