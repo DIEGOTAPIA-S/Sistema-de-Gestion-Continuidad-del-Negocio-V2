@@ -22,115 +22,161 @@ const Sidebar = ({
     onToggleNews,    // New prop
     showNews         // New prop
 }) => {
-    const [eventDetails, setEventDetails] = useState({
-        description: '',
-        type: 'Sismo',
-    });
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        const updated = { ...eventDetails, [name]: value };
-        setEventDetails(updated);
-        onEventChange(updated);
+    const containerStyle = {
+        width: isCollapsed ? '70px' : '350px',
+        background: 'white',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        borderRight: '1px solid #e2e8f0',
+        boxShadow: '2px 0 5px rgba(0,0,0,0.05)',
+        transition: 'width 0.3s ease-in-out',
+        overflow: 'hidden' // Prevent content overflow during transition
+    };
+
+    const headerStyle = {
+        padding: '20px',
+        display: 'flex',
+        justifyContent: isCollapsed ? 'center' : 'space-between',
+        alignItems: 'center',
+        borderBottom: '1px solid #f1f5f9'
     };
 
     return (
-        <div className="sidebar" style={{ width: '350px', background: 'white', display: 'flex', flexDirection: 'column', height: '100%', borderRight: '1px solid #e2e8f0', boxShadow: '2px 0 5px rgba(0,0,0,0.05)' }}>
+        <div className="sidebar" style={containerStyle}>
 
-            {/* Title */}
-            <div style={{ padding: '20px 20px 10px 20px' }}>
-                <h3 style={{ fontSize: '1.2rem', color: '#0f172a', margin: 0 }}>⚙️ Controles</h3>
+            {/* Title & Toggle */}
+            <div style={headerStyle}>
+                {!isCollapsed && <h3 style={{ fontSize: '1.2rem', color: '#0f172a', margin: 0, whiteSpace: 'nowrap' }}>⚙️ Controles</h3>}
+                <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#64748b', padding: '5px' }}
+                    title={isCollapsed ? "Expandir" : "Contraer"}
+                >
+                    {isCollapsed ? '⇥' : '⇤'}
+                </button>
             </div>
 
             {/* Action Buttons Section */}
-            <div style={{ padding: '10px 20px 20px 20px', borderBottom: '1px solid #f1f5f9', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <button onClick={onShowList} className="btn-sidebar">
-                    📋 Sedes
+            <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto' }}>
+
+                <button onClick={onShowList} className="btn-sidebar" title="Sedes">
+                    📋 {!isCollapsed && "Sedes"}
                 </button>
 
-                <button onClick={onToggleCharts} className={`btn-sidebar ${showCharts ? 'active' : ''}`}>
-                    📊 {showCharts ? 'Ocultar' : 'Métricas'}
+                <button onClick={onToggleCharts} className={`btn-sidebar ${showCharts ? 'active' : ''}`} title="Métricas">
+                    📊 {!isCollapsed && (showCharts ? 'Ocultar' : 'Métricas')}
                 </button>
 
-                <button onClick={onToggleWeather} className={`btn-sidebar ${showWeather ? 'active-blue' : ''}`}>
-                    ☁️ {showWeather ? 'Ocultar Clima' : 'Clima'}
+                <button onClick={onToggleWeather} className={`btn-sidebar ${showWeather ? 'active-blue' : ''}`} title="Clima">
+                    ☁️ {!isCollapsed && (showWeather ? 'Ocultar Clima' : 'Clima')}
                 </button>
 
-                <button onClick={onToggleTraffic} className={`btn-sidebar ${showTraffic ? 'active-orange' : ''}`}>
-                    🚗 {showTraffic ? 'Ocultar Tráfico' : 'Tráfico'}
+                <button onClick={onToggleTraffic} className={`btn-sidebar ${showTraffic ? 'active-orange' : ''}`} title="Tráfico">
+                    🚗 {!isCollapsed && (showTraffic ? 'Ocultar Tráfico' : 'Tráfico')}
                 </button>
 
                 {/* Sismos Control Group */}
-                <div style={{ display: 'flex', gap: '5px' }}>
-                    <button onClick={onToggleEarthquakes} className={`btn-sidebar ${showEarthquakes ? 'active-red' : ''}`} style={{ flex: 1, justifyContent: 'space-between' }}>
-                        <span>⚡ {showEarthquakes ? 'Ocultar Sismos' : 'Sismos'}</span>
-                        {earthquakeAlerts.length > 0 && <span style={{ background: 'white', color: '#e11d48', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 'bold' }}>{earthquakeAlerts.length}</span>}
+                <div style={{ display: 'flex', gap: '5px', flexDirection: isCollapsed ? 'column' : 'row' }}>
+                    <button onClick={onToggleEarthquakes} className={`btn-sidebar ${showEarthquakes ? 'active-red' : ''}`} style={{ flex: 1, justifyContent: isCollapsed ? 'center' : 'flex-start' }} title="Sismos">
+                        <span>⚡ {!isCollapsed && (showEarthquakes ? 'Ocultar Sismos' : 'Sismos')}</span>
+                        {/* Notify Badge */}
+                        {earthquakeAlerts.length > 0 && (
+                            <span style={{
+                                background: 'white',
+                                color: '#e11d48',
+                                borderRadius: '50%',
+                                width: '20px',
+                                height: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.75rem',
+                                fontWeight: 'bold',
+                                position: isCollapsed ? 'absolute' : 'static',
+                                top: isCollapsed ? '0' : 'auto',
+                                right: isCollapsed ? '0' : 'auto',
+                                transform: isCollapsed ? 'scale(0.8)' : 'none'
+                            }}>
+                                {earthquakeAlerts.length}
+                            </span>
+                        )}
                     </button>
                     {showEarthquakes && (
-                        <button onClick={onSimulateAlert} className="btn-sidebar" style={{ width: '50px', padding: '0', fontSize: '1.2rem', justifyContent: 'center' }} title="Simular Alerta">
+                        <button onClick={onSimulateAlert} className="btn-sidebar" style={{ width: isCollapsed ? '100%' : '50px', padding: '5px', justifyContent: 'center' }} title="Simular Alerta">
                             🔔
                         </button>
                     )}
                 </div>
 
-                <button onClick={onShowHistory} className="btn-sidebar">
-                    📜 Historial
+                <div style={{ borderTop: '1px solid #f1f5f9', margin: '5px 0' }}></div>
+
+                <button onClick={onShowHistory} className="btn-sidebar" title="Historial">
+                    📜 {!isCollapsed && "Historial"}
                 </button>
 
-                <button onClick={onGenerateReport} className="btn-sidebar btn-green" disabled={affectedSedes.length === 0}>
-                    📥 PDF
+                <button onClick={onGenerateReport} className="btn-sidebar btn-green" disabled={affectedSedes.length === 0} title="Generar PDF">
+                    📥 {!isCollapsed && "PDF"}
                 </button>
 
-                <button onClick={onShowHelp} className="btn-sidebar" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569' }}>
-                    ❓ Ayuda
+                <div style={{ flex: 1 }}></div>
+
+                <button onClick={onShowHelp} className="btn-sidebar" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b' }} title="Ayuda">
+                    ❓ {!isCollapsed && "Ayuda"}
                 </button>
 
-                <button onClick={onToggleNews} className={`btn-sidebar ${showNews ? 'active' : ''}`} style={{ background: showNews ? '#e0f2fe' : 'white', color: showNews ? '#0284c7' : 'inherit', border: showNews ? '1px solid #7dd3fc' : '1px solid #e2e8f0' }}>
-                    📰 Noticias
+                <button onClick={onToggleNews} className={`btn-sidebar ${showNews ? 'active' : ''}`} style={{ background: showNews ? '#e0f2fe' : 'white', color: showNews ? '#0284c7' : 'inherit', border: showNews ? '1px solid #7dd3fc' : '1px solid #e2e8f0' }} title="Noticias">
+                    📰 {!isCollapsed && "Noticias"}
                 </button>
             </div>
 
-            <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
-
-                {/* Seismic Alerts Panel */}
-                {showEarthquakes && (
-                    <div style={{ marginBottom: '20px', background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '8px', padding: '15px' }}>
-                        <h4 style={{ margin: '0 0 10px 0', color: '#881337', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            ⚠️ Alertas Sísmicas (24h)
-                        </h4>
-                        {earthquakeAlerts.length > 0 ? (
-                            <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem' }}>
-                                {earthquakeAlerts.slice(0, 5).map((alert, idx) => (
-                                    <li key={idx} style={{ padding: '8px 0', borderBottom: idx < 4 ? '1px solid #ffe4e6' : 'none', color: '#be123c' }}>
-                                        <strong>M {alert.mag}</strong> - {alert.place} <br />
-                                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>Hace {Math.round((Date.now() - alert.time) / (1000 * 60 * 60))} horas</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p style={{ fontSize: '0.85rem', color: '#9f1239', margin: 0 }}>Sin sismos mayores recientes.</p>
-                        )}
-                    </div>
-                )}
-            </div>
+            {/* Expansible Alerts Panel (Bottom) - Only show if not collapsed or make it pop over? For now hide if collapsed to avoid mess */}
+            {!isCollapsed && (
+                <div style={{ padding: '20px', overflowY: 'auto', borderTop: '1px solid #f1f5f9' }}>
+                    {/* Seismic Alerts Panel */}
+                    {showEarthquakes && (
+                        <div style={{ marginBottom: '20px', background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '8px', padding: '15px' }}>
+                            <h4 style={{ margin: '0 0 10px 0', color: '#881337', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                ⚠️ Alertas Sísmicas (24h)
+                            </h4>
+                            {earthquakeAlerts.length > 0 ? (
+                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem' }}>
+                                    {earthquakeAlerts.slice(0, 5).map((alert, idx) => (
+                                        <li key={idx} style={{ padding: '8px 0', borderBottom: idx < 4 ? '1px solid #ffe4e6' : 'none', color: '#be123c' }}>
+                                            <strong>M {alert.mag}</strong> - {alert.place} <br />
+                                            <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>Hace {Math.round((Date.now() - alert.time) / (1000 * 60 * 60))} horas</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p style={{ fontSize: '0.85rem', color: '#9f1239', margin: 0 }}>Sin sismos mayores recientes.</p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
 
             <style>{`
                 .btn-sidebar {
-                    padding: 10px 12px;
+                    padding: 10px;
                     border: 1px solid #cbd5e1;
                     background: white;
-                    border-radius: 6px;
-                    font-size: 0.9rem;
+                    border-radius: 8px;
+                    font-size: 0.95rem;
                     cursor: pointer;
                     transition: all 0.2s;
                     color: #475569;
                     font-weight: 500;
                     display: flex;
                     align-items: center;
-                    justify-content: center;
-                    gap: 5px;
+                    justify-content: ${isCollapsed ? 'center' : 'flex-start'}; /* Center icons when collapsed */
+                    gap: 12px; /* Consistent gap */
+                    height: 42px; /* Fixed height for consistency */
+                    position: relative;
                 }
-                .btn-sidebar:hover { background: #f1f5f9; border-color: #94a3b8; }
+                .btn-sidebar:hover { background: #f1f5f9; border-color: #94a3b8; transform: translateY(-1px); }
                 .btn-sidebar.active { background: #2563eb; color: white; border-color: #2563eb; }
                 .btn-sidebar.active-red { background: #e11d48; color: white; border-color: #e11d48; animation: pulse 2s infinite; }
                 .btn-sidebar.active-blue { background: #0ea5e9; color: white; border-color: #0ea5e9; }
@@ -139,8 +185,6 @@ const Sidebar = ({
                 .btn-sidebar.btn-green { background: #10b981; color: white; border: none; }
                 .btn-sidebar.btn-green:hover { background: #059669; }
                 .btn-sidebar.btn-green:disabled { background: #a7f3d0; cursor: not-allowed; }
-                .btn-sidebar.btn-dark { background: #0f172a; color: white; border: none; }
-                .btn-sidebar.btn-dark:hover { background: #1e293b; }
             `}</style>
         </div>
     );
