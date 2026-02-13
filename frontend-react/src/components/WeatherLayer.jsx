@@ -9,9 +9,9 @@ const WeatherLayer = ({ sedes, visible }) => {
     const [radarTs, setRadarTs] = useState(null); // Timestamp for RainViewer
 
     // Mapeo simple de códigos WMO a iconos/descripciones
-    const getWeatherIcon = (code) => {
-        if (code === 0) return '☀️'; // Despejado
-        if (code <= 3) return '⛅'; // Nublado
+    const getWeatherIcon = (code, isDay) => {
+        if (code === 0) return isDay ? '☀️' : '🌙'; // Despejado
+        if (code <= 3) return isDay ? '⛅' : '☁️'; // Nublado
         if (code <= 48) return '🌫️'; // Niebla
         if (code <= 55) return '🌦️'; // Llovizna
         if (code <= 67) return '🌧️'; // Lluvia
@@ -52,8 +52,9 @@ const WeatherLayer = ({ sedes, visible }) => {
 
             const promises = sedes.map(async (sede) => {
                 try {
-                    const url = `https://api.open-meteo.com/v1/forecast?latitude=${sede.latitud}&longitude=${sede.longitud}&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto`;
+                    const url = `https://api.open-meteo.com/v1/forecast?latitude=${sede.latitud}&longitude=${sede.longitud}&current=temperature_2m,weather_code,wind_speed_10m,is_day&timezone=auto`;
                     const res = await axios.get(url);
+                    console.log(`Clima para ${sede.nombre}:`, res.data.current); // DEBUG: Check is_day value
                     return { id: sede.id, data: res.data.current };
                 } catch (err) {
                     console.error(`Error clima sede ${sede.nombre}:`, err);
@@ -119,7 +120,7 @@ const WeatherLayer = ({ sedes, visible }) => {
                 const weather = weatherData[sede.id];
                 if (!weather) return null;
 
-                const icon = getWeatherIcon(weather.weather_code);
+                const icon = getWeatherIcon(weather.weather_code, weather.is_day);
                 const color = getZoneColor(weather.weather_code, weather.wind_speed_10m);
 
                 // Create a custom DivIcon for the weather symbol
