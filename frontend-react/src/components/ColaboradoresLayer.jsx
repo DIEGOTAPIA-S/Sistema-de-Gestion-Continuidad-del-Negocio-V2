@@ -31,6 +31,7 @@ const ColaboradoresLayer = ({ visible, colaboradores }) => {
                 <Marker
                     key={colab.id}
                     position={[colab.latitud, colab.longitud]}
+                    zIndexOffset={-100}
                     icon={colaboradorIcon}
                 >
                     <Popup>

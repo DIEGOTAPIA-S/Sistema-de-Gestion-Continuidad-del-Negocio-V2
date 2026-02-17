@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ColaboradorUpload from './ColaboradorUpload';
+import { downloadColaboradoresCSV } from '../utils/exportUtils';
 
 const Sidebar = ({
     onEventChange,
@@ -26,9 +27,57 @@ const Sidebar = ({
     showInfrastructure, // New prop
     onToggleColaboradores, // New prop
     showColaboradores, // New prop
-    onSearchColaborador // New prop
+    colaboradores = [], // Full list for search
+    sedes = [], // Full list for search
+    onLocate, // Function to fly to location
+    affectedColaboradores = [] // New prop
 }) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [includeColaboradoresList, setIncludeColaboradoresList] = useState(false);
+
+    // Search State
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+
+    const handleSearch = (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+
+        if (!query || query.length < 2) {
+            setSearchResults([]);
+            return;
+        }
+
+        const lowerQuery = query.toLowerCase();
+
+        // Filter Sedes
+        const matchedSedes = sedes.filter(s =>
+            s.nombre.toLowerCase().includes(lowerQuery) ||
+            s.direccion.toLowerCase().includes(lowerQuery)
+        ).map(s => ({ ...s, type: 'sede', label: s.nombre, subLabel: s.direccion }));
+
+        // Filter Colaboradores
+        const matchedColabs = colaboradores.filter(c =>
+            (c.nombres && c.nombres.toLowerCase().includes(lowerQuery)) ||
+            (c.apellidos && c.apellidos.toLowerCase().includes(lowerQuery)) ||
+            (c.cargo && c.cargo.toLowerCase().includes(lowerQuery)) ||
+            (c.area && c.area.toLowerCase().includes(lowerQuery)) ||
+            (c.compania && c.compania.toLowerCase().includes(lowerQuery))
+        ).map(c => ({
+            ...c,
+            type: 'colaborador',
+            label: `${c.nombres} ${c.apellidos}`,
+            subLabel: `${c.cargo} - ${c.compania || ''}`
+        }));
+
+        setSearchResults([...matchedSedes, ...matchedColabs].slice(0, 10)); // Limit to 10 results
+    };
+
+    const handleSelectResult = (item) => {
+        setSearchQuery(''); // Clear search on select? or keep it? User might want to clear it manually. Let's clear to show map.
+        setSearchResults([]);
+        if (onLocate) onLocate(item);
+    };
 
     const containerStyle = {
         width: isCollapsed ? '70px' : '350px',
@@ -131,7 +180,36 @@ const Sidebar = ({
                     📜 {!isCollapsed && "Historial"}
                 </button>
 
-                <button onClick={onGenerateReport} className="btn-sidebar btn-green" disabled={affectedSedes.length === 0} title="Generar PDF">
+                {/* Report Section */}
+                {!isCollapsed && affectedSedes.length > 0 && (
+                    <div style={{ padding: '0 5px', marginBottom: '5px' }}>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '5px' }}>
+                            {affectedColaboradores.length} empleados en zona.
+                        </div>
+                        <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '5px', color: '#475569', cursor: 'pointer' }}>
+                            <input
+                                type="checkbox"
+                                checked={includeColaboradoresList}
+                                onChange={(e) => setIncludeColaboradoresList(e.target.checked)}
+                            />
+                            Incluir lista de nombres
+                        </label>
+                    </div>
+                )}
+
+                {/* CSV Download Button */}
+                {!isCollapsed && affectedSedes.length > 0 && (
+                    <button
+                        onClick={() => downloadColaboradoresCSV(affectedColaboradores)}
+                        className="btn-sidebar"
+                        style={{ marginTop: '5px', fontSize: '0.85rem', background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0' }}
+                        title="Descargar Excel"
+                    >
+                        📊 Descargar Excel ({affectedColaboradores.length})
+                    </button>
+                )}
+
+                <button onClick={() => onGenerateReport({ includeColaboradoresList })} className="btn-sidebar btn-green" disabled={affectedSedes.length === 0} title="Generar PDF">
                     📥 {!isCollapsed && "PDF"}
                 </button>
 
@@ -145,21 +223,74 @@ const Sidebar = ({
                     📰 {!isCollapsed && "Noticias"}
                 </button>
 
-                {/* Search Bar for Colaboradores - Only visible when expanded and layer active (optional condition) */}
+                {/* Smart Search Bar */}
+                {/* Always visible or only when layers active? User said "search bar". Let's make it always visible or near relevant controls. */}
+                {/* Actually, let's put it at the top of controls if expanded, or inside the specific section. 
+                    The previous input was conditional on showColaboradores. The user wants a general search. 
+                    Let's place it here but allow searching everything. 
+                */}
                 {!isCollapsed && (
-                    <div style={{ marginTop: '10px', paddding: '5px' }}>
+                    <div style={{ position: 'relative', marginBottom: '10px' }}>
                         <input
                             type="text"
-                            placeholder="🔍 Buscar colaborador..."
-                            onChange={(e) => onSearchColaborador && onSearchColaborador(e.target.value)}
+                            placeholder="🔍 Buscar Sede o Colaborador..."
+                            value={searchQuery}
+                            onChange={handleSearch}
                             style={{
                                 width: '100%',
-                                padding: '8px',
-                                borderRadius: '6px',
+                                padding: '8px 12px',
                                 border: '1px solid #cbd5e1',
-                                fontSize: '0.9rem'
+                                borderRadius: '6px',
+                                fontSize: '0.9rem',
+                                outline: 'none',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                             }}
                         />
+                        {/* Dropdown Results */}
+                        {searchResults.length > 0 && (
+                            <ul style={{
+                                position: 'absolute',
+                                top: '100%',
+                                left: 0,
+                                right: 0,
+                                background: 'white',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '6px',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                marginTop: '4px',
+                                maxHeight: '250px',
+                                overflowY: 'auto',
+                                zIndex: 1000,
+                                listStyle: 'none',
+                                padding: '5px 0',
+                                margin: '4px 0 0 0'
+                            }}>
+                                {searchResults.map((item, idx) => (
+                                    <li
+                                        key={idx}
+                                        onClick={() => handleSelectResult(item)}
+                                        style={{
+                                            padding: '8px 12px',
+                                            cursor: 'pointer',
+                                            borderBottom: idx < searchResults.length - 1 ? '1px solid #f1f5f9' : 'none',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                                    >
+                                        <span style={{ fontSize: '1.2rem' }}>
+                                            {item.type === 'sede' ? '🏢' : '👤'}
+                                        </span>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: '0.9rem', fontWeight: 500, color: '#0f172a' }}>{item.label}</span>
+                                            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{item.subLabel}</span>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                 )}
             </div>

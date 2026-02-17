@@ -20,6 +20,7 @@ import EventRegistrationPanel from '../components/EventRegistrationPanel'; // Im
 import InfrastructureLayer from '../components/InfrastructureLayer';
 import ColaboradoresLayer from '../components/ColaboradoresLayer'; // Importar capa de colaboradores
 import { fetchColaboradores } from '../services/colaboradoresService'; // Importar servicio
+import { booleanPointInPolygon, point } from '@turf/turf'; // Import Turf for analysis
 
 const MapDashboard = () => {
     const { user, logout } = useAuth();
@@ -99,6 +100,22 @@ const MapDashboard = () => {
         }
     }, [earthquakeAlerts]);
 
+    // Calculate Affected Colaboradores
+    const [affectedColaboradores, setAffectedColaboradores] = useState([]);
+
+    useEffect(() => {
+        if (zones && zones.length > 0 && colaboradores.length > 0) {
+            const affected = colaboradores.filter(c => {
+                if (!c.latitud || !c.longitud) return false;
+                const pt = point([c.longitud, c.latitud]); // Turf uses [Lon, Lat]
+                return zones.some(zone => booleanPointInPolygon(pt, zone));
+            });
+            setAffectedColaboradores(affected);
+        } else {
+            setAffectedColaboradores([]);
+        }
+    }, [zones, colaboradores]);
+
     useEffect(() => {
         getSedes()
             .then(data => {
@@ -147,7 +164,7 @@ const MapDashboard = () => {
         if (currentZones) setZones(currentZones);
     };
 
-    const handleGenerateReport = async () => {
+    const handleGenerateReport = async (options = {}) => {
         try {
             // Derived State for report
             const reportSedes = updatedSedesWithStatus();
@@ -222,7 +239,7 @@ const MapDashboard = () => {
                 }
             }
 
-            generatePDFReport(reportSedes, affectedSedes, nearbySedes, eventDetails, user, mapImg, chartsImg, reportInfrastructure);
+            generatePDFReport(reportSedes, affectedSedes, nearbySedes, eventDetails, user, mapImg, chartsImg, reportInfrastructure, affectedColaboradores, options);
         } catch (error) {
             console.error("Error generating report:", error);
             alert("Error general al generar el reporte: " + error.message);
@@ -270,6 +287,15 @@ const MapDashboard = () => {
 
     const sedesWithStatus = updatedSedesWithStatus();
 
+    const handleLocate = (item) => {
+        if (item && item.latitud && item.longitud) {
+            setFocusLocation({
+                coords: [item.latitud, item.longitud],
+                zoom: 18 // Close zoom for specific item
+            });
+        }
+    };
+
     return (
         <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#f8fafc' }}>
             {/* Header */}
@@ -307,6 +333,7 @@ const MapDashboard = () => {
                 <Sidebar
                     onEventChange={() => { }}
                     affectedSedes={affectedSedes}
+                    affectedColaboradores={affectedColaboradores} // Pass to Sidebar
                     nearbySedes={nearbySedes}
                     onSave={() => handleSaveEvent(eventDetails)}
                     onGenerateReport={handleGenerateReport}
@@ -348,6 +375,9 @@ const MapDashboard = () => {
                     onToggleColaboradores={() => setShowColaboradores(!showColaboradores)}
                     showColaboradores={showColaboradores}
                     onSearchColaborador={setSearchTerm}
+                    colaboradores={colaboradores} // Pass full list
+                    sedes={sedes} // Pass full list
+                    onLocate={handleLocate} // Fly to function
                 />
 
                 {/* Right Content Area (Scrollable) */}
@@ -366,7 +396,7 @@ const MapDashboard = () => {
                             {/* Debugging Weather Layer: visible={showWeather} sedes.length={sedes.length} */}
                             <WeatherLayer visible={showWeather} sedes={sedes} />
                             <InfrastructureLayer visible={showInfrastructure} onUpdate={setInfrastructurePoints} />
-                            <ColaboradoresLayer visible={showColaboradores} colaboradores={filteredColaboradores} />
+                            <ColaboradoresLayer visible={showColaboradores} colaboradores={colaboradores} />
                         </MapComponent>
 
                         {/* Waze Traffic Overlay */}

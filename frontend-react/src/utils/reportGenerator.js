@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDetails, user, mapImg, chartsImg, infrastructurePoints) => {
+export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDetails, user, mapImg, chartsImg, infrastructurePoints, affectedColaboradores = [], options = {}) => {
     try {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.width;
@@ -48,16 +48,52 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
         // --- Stats Box ---
         const affCount = Array.isArray(affectedSedes) ? affectedSedes.length : 0;
         const nearCount = Array.isArray(nearbySedes) ? nearbySedes.length : 0;
+        const colabCount = Array.isArray(affectedColaboradores) ? affectedColaboradores.length : 0;
 
         doc.setFillColor(248, 250, 252);
         doc.setDrawColor(226, 232, 240);
-        doc.rect(14, currentY, pageWidth - 28, 20, 'FD');
+        doc.rect(14, currentY, pageWidth - 28, 25, 'FD'); // Increased height
         doc.setTextColor(30);
         doc.setFontSize(10);
-        doc.text(`Sedes Afectadas: ${affCount}`, 20, currentY + 13);
-        doc.text(`Sedes Cercanas: ${nearCount}`, 80, currentY + 13);
+        doc.text(`Sedes Afectadas: ${affCount}`, 20, currentY + 10);
+        doc.text(`Sedes Cercanas: ${nearCount}`, 80, currentY + 10);
+        doc.text(`Colaboradores en Zona: ${colabCount}`, 20, currentY + 18);
 
-        currentY += 25;
+        // Breakdown by modality
+        const presencial = affectedColaboradores.filter(c => c.modalidad !== 'Remoto').length;
+        const remoto = affectedColaboradores.filter(c => c.modalidad === 'Remoto').length;
+        doc.text(`(Presencial: ${presencial}, Remoto: ${remoto})`, 80, currentY + 18);
+
+        currentY += 30;
+
+        // --- Human Talent Table (Optional) ---
+        if (options.includeColaboradoresList && colabCount > 0) {
+            if (currentY + 60 > 280) { doc.addPage(); currentY = 20; }
+
+            doc.setFontSize(12);
+            doc.setTextColor(15, 23, 42);
+            doc.text("Detalle de Colaboradores Afectados", 14, currentY);
+            currentY += 5;
+
+            const colabBody = affectedColaboradores.map(c => [
+                (c.nombres || '') + ' ' + (c.apellidos || ''),
+                c.cargo || '',
+                c.area || '',
+                c.sede_nombre || 'N/A',
+                c.email || 'No registrado'
+            ]);
+
+            autoTable(doc, {
+                startY: currentY,
+                head: [['Nombre', 'Cargo', 'Area', 'Sede', 'Email']],
+                body: colabBody,
+                theme: 'striped',
+                headStyles: { fillColor: [59, 130, 246], textColor: 255 }, // Blue
+                styles: { fontSize: 8 },
+                didDrawPage: (data) => { currentY = data.cursor.y + 10; }
+            });
+            currentY = doc.lastAutoTable.finalY + 10;
+        }
 
         // --- Charts Image ---
         if (chartsImg) {

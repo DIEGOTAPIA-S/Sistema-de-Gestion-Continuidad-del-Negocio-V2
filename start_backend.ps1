@@ -4,15 +4,31 @@ Write-Host "Iniciando servidor Django..." -ForegroundColor Green
 # 1. Entrar a la carpeta del backend
 cd backend
 
-# 2. Activar el entorno virtual y ejecutar el servidor
-# 2. Activar el entorno virtual y ejecutar el servidor
-# ..\ significa "subir un nivel" porque venv está en la carpeta raiz, no dentro de backend
-try {
+# 2. Buscar el entorno virtual correcto
+# El usuario indica "venv dentro de venv", así que probaremos primero el local (backend/venv)
+# y luego el del padre (root/venv)
+
+if (Test-Path "venv\Scripts\python.exe") {
+    Write-Host "Usando entorno virtual local (backend/venv)..." -ForegroundColor Cyan
+    & "venv\Scripts\python.exe" manage.py runserver
+}
+elseif (Test-Path "..\venv\Scripts\python.exe") {
+    Write-Host "Usando entorno virtual raíz (backend/../venv)..." -ForegroundColor Cyan
     & "..\venv\Scripts\python.exe" manage.py runserver
 }
-catch {
-    Write-Host "Error al iniciar Django. Revisa que el entorno virtual exista." -ForegroundColor Red
-    Pause
+else {
+    Write-Host "No se encontró entorno virtual en 'backend\venv' ni en '..\venv'." -ForegroundColor Global
+    Write-Host "Intentando con python global..." -ForegroundColor Yellow
+    try {
+        python manage.py runserver
+    }
+    catch {
+        Write-Host "Error crítico: No se pudo iniciar Django. Verifica tu instalación de Python/Venv." -ForegroundColor Red
+        Pause
+    }
 }
 
-# Nota: El servidor quedará corriendo en esta ventana. No la cierres.
+# No cerrar ventana inmediatamente si hay error
+if ($LASTEXITCODE -ne 0) {
+    Pause
+}

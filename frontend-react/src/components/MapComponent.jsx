@@ -20,7 +20,7 @@ const MapController = ({ focusLocation }) => {
         console.log("MapController received focusLocation:", focusLocation);
         if (focusLocation && focusLocation.coords) {
             console.log("Flying to:", focusLocation.coords);
-            map.flyTo(focusLocation.coords, 8, { // Zoom 8 is good for regional context
+            map.flyTo(focusLocation.coords, focusLocation.zoom || 8, { // Use provided zoom or default to 8
                 animate: true,
                 duration: 2
             });
@@ -109,6 +109,7 @@ const MapComponent = ({ sedes, onAnalysisUpdate, children, focusLocation }) => {
                     <Marker
                         key={sede.id}
                         position={[sede.latitud, sede.longitud]}
+                        zIndexOffset={1000}
                         icon={sede.status === 'affected' ? dangerIcon : (sede.status === 'nearby' ? warningIcon : normalIcon)}
                     >
                         <Popup>

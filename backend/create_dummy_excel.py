@@ -54,8 +54,11 @@ for i in range(50):
         lon = -74.20 + (random.random() * 0.15)
         # 30% chance de tener sede asignada aunque sea remoto
         if random.random() > 0.7:
-             sede_random = random.choice(SEDES_REALES)
-             sede_nombre = sede_random["nombre"]
+             # Filtrar solo sedes de Bogotá (Latitud aprox 4.x) para que coincida con la ubicación de vivienda
+             sedes_bogota = [s for s in SEDES_REALES if 4.5 < s["latitud"] < 4.8]
+             if sedes_bogota:
+                sede_random = random.choice(sedes_bogota)
+                sede_nombre = sede_random["nombre"]
     else:
         # Presencial o Híbrido -> Ubicación EXACTA de una sede real
         sede_asignada = random.choice(SEDES_REALES)
@@ -63,9 +66,9 @@ for i in range(50):
         lat = sede_asignada["latitud"]
         lon = sede_asignada["longitud"]
         
-        # Pequeña variación (jitter) solo para que no queden 100% apilados visualmente si hay muchos
-        # lat += (random.random() - 0.5) * 0.0001
-        # lon += (random.random() - 0.5) * 0.0001
+        # Pequeña variación (jitter) para que no queden 100% apilados
+        lat += (random.random() - 0.5) * 0.0005
+        lon += (random.random() - 0.5) * 0.0005
 
     row = {
         "Identificacion": f"{1000000 + i}",
