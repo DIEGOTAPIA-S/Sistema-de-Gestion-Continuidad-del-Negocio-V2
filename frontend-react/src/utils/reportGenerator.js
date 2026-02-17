@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDetails, user, mapImg, chartsImg) => {
+export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDetails, user, mapImg, chartsImg, infrastructurePoints) => {
     try {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.width;
@@ -143,6 +143,30 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
         // Render Tables
         renderTable('🚨 Sedes Afectadas (Zona Directa)', affectedSedes, [220, 38, 38]); // Red
         renderTable('⚠️ Sedes Cercanas (< 2km)', nearbySedes, [234, 88, 12]); // Orange
+
+        // --- Infrastructure Table ---
+        if (infrastructurePoints && infrastructurePoints.length > 0) {
+            doc.setFontSize(12);
+            doc.setTextColor(15, 23, 42);
+            doc.text("🚑 Infraestructura de Apoyo Identificada", 14, currentY);
+            currentY += 5;
+
+            const infraBody = infrastructurePoints.map(p => [
+                p.type === 'police' ? 'Policía' : (p.type === 'fire_station' ? 'Bomberos' : 'Salud'),
+                p.name,
+                `${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}`
+            ]);
+
+            autoTable(doc, {
+                startY: currentY,
+                head: [['Tipo', 'Nombre / Descripción', 'Ubicación']],
+                body: infraBody,
+                theme: 'striped',
+                headStyles: { fillColor: [75, 85, 99], textColor: 255 }, // Gray
+                styles: { fontSize: 8 },
+                columnStyles: { 0: { fontStyle: 'bold', width: 30 } }
+            });
+        }
 
         doc.save(`Reporte_Continuidad_${new Date().getTime()}.pdf`);
 

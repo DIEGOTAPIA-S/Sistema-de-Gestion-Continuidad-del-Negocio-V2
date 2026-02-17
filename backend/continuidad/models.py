@@ -36,6 +36,24 @@ class Proceso(models.Model):
     def __str__(self):
         return f"{self.nombre} - {self.sede.nombre}"
 
+class Colaborador(models.Model):
+    """Colaborador de la organización con ubicación (residencia/trabajo)."""
+    nombre = models.CharField(max_length=200)
+    identificacion = models.CharField(max_length=50, unique=True, help_text='Cédula o ID único')
+    cargo = models.CharField(max_length=100, blank=True)
+    gerencia = models.CharField(max_length=100, blank=True)
+    sede_asignada = models.ForeignKey(Sede, on_delete=models.SET_NULL, null=True, blank=True, related_name='colaboradores')
+    direccion = models.CharField(max_length=300, blank=True, help_text='Dirección de residencia')
+    latitud = models.DecimalField(max_digits=9, decimal_places=6)
+    longitud = models.DecimalField(max_digits=9, decimal_places=6)
+    
+    class Meta:
+        ordering = ['nombre']
+        verbose_name_plural = 'Colaboradores'
+
+    def __str__(self):
+        return f"{self.nombre} ({self.cargo})"
+
 
 class Evento(models.Model):
     """Evento / Incidente registrado."""
@@ -83,4 +101,3 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     if hasattr(instance, 'profile'):
         instance.profile.save()
-

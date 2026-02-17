@@ -49,3 +49,34 @@ export const warningIcon = new L.DivIcon({
     iconAnchor: [15, 15],
     popupAnchor: [0, -15]
 });
+
+// --- INFRAESTRUCTURA ICONS ---
+export const policeIcon = new L.DivIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background-color: #1e3a8a; border-radius: 50%; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+             <span style="font-size: 20px;">👮</span>
+           </div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
+});
+
+export const fireIcon = new L.DivIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background-color: #ef4444; border-radius: 50%; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+             <span style="font-size: 20px;">🚒</span>
+           </div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
+});
+
+export const hospitalIcon = new L.DivIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background-color: #ffffff; border-radius: 50%; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; border: 2px solid #dc2626; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+             <span style="font-size: 20px;">🏥</span>
+           </div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
+});

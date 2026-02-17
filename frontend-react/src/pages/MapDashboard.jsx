@@ -16,6 +16,7 @@ import WeatherLayer from '../components/WeatherLayer'; // Importar capa de clima
 import NewsFeed from '../components/NewsFeed'; // Importar componente de noticias
 import InstructionsModal from '../components/InstructionsModal'; // Importar modal de instrucciones
 import EventRegistrationPanel from '../components/EventRegistrationPanel'; // Importar nuevo panel de eventos
+import InfrastructureLayer from '../components/InfrastructureLayer'; // Importar capa de infraestructura
 
 const MapDashboard = () => {
     const { user, logout } = useAuth();
@@ -49,6 +50,8 @@ const MapDashboard = () => {
     const [showEarthquakes, setShowEarthquakes] = useState(false);
     const [showWeather, setShowWeather] = useState(false); // Weather Layer State
     const [showTraffic, setShowTraffic] = useState(false); // Traffic State
+    const [showInfrastructure, setShowInfrastructure] = useState(false); // Infrastructure State
+    const [infrastructurePoints, setInfrastructurePoints] = useState([]); // Infrastructure Data
     const [earthquakeAlerts, setEarthquakeAlerts] = useState([]);
     const [emergencyAlert, setEmergencyAlert] = useState(null); // State for the popup
     const [focusLocation, setFocusLocation] = useState(null); // State for map FlyTo
@@ -156,7 +159,7 @@ const MapDashboard = () => {
                 }
             }
 
-            generatePDFReport(reportSedes, affectedSedes, nearbySedes, eventDetails, user, mapImg, chartsImg);
+            generatePDFReport(reportSedes, affectedSedes, nearbySedes, eventDetails, user, mapImg, chartsImg, infrastructurePoints);
         } catch (error) {
             console.error("Error generating report:", error);
             alert("Error general al generar el reporte: " + error.message);
@@ -277,6 +280,8 @@ const MapDashboard = () => {
                     onShowHelp={() => setShowHelp(true)}
                     onToggleNews={() => setShowNews(!showNews)}
                     showNews={showNews}
+                    onToggleInfrastructure={() => setShowInfrastructure(!showInfrastructure)}
+                    showInfrastructure={showInfrastructure}
                 />
 
                 {/* Right Content Area (Scrollable) */}
@@ -293,6 +298,7 @@ const MapDashboard = () => {
                         >
                             <EarthquakeLayer visible={showEarthquakes} onAlertsUpdate={setEarthquakeAlerts} />
                             <WeatherLayer visible={showWeather} sedes={sedes} />
+                            <InfrastructureLayer visible={showInfrastructure} onUpdate={setInfrastructurePoints} />
                         </MapComponent>
 
                         {/* Waze Traffic Overlay */}

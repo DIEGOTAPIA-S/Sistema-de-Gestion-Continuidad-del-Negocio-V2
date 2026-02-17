@@ -20,7 +20,9 @@ const Sidebar = ({
     showTraffic,      // New prop
     onShowHelp,       // New prop
     onToggleNews,    // New prop
-    showNews         // New prop
+    showNews,         // New prop
+    onToggleInfrastructure, // New prop
+    showInfrastructure // New prop
 }) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -76,6 +78,10 @@ const Sidebar = ({
 
                 <button onClick={onToggleTraffic} className={`btn-sidebar ${showTraffic ? 'active-orange' : ''}`} title="Tráfico">
                     🚗 {!isCollapsed && (showTraffic ? 'Ocultar Tráfico' : 'Tráfico')}
+                </button>
+
+                <button onClick={onToggleInfrastructure} className={`btn-sidebar ${showInfrastructure ? 'active-purple' : ''}`} title="Infraestructura">
+                    🚑 {!isCollapsed && (showInfrastructure ? 'Ocultar Ayuda' : 'Ayuda/Emergencia')}
                 </button>
 
                 {/* Sismos Control Group */}
@@ -181,6 +187,7 @@ const Sidebar = ({
                 .btn-sidebar.active-red { background: #e11d48; color: white; border-color: #e11d48; animation: pulse 2s infinite; }
                 .btn-sidebar.active-blue { background: #0ea5e9; color: white; border-color: #0ea5e9; }
                 .btn-sidebar.active-orange { background: #f97316; color: white; border-color: #f97316; }
+                .btn-sidebar.active-purple { background: #7c3aed; color: white; border-color: #7c3aed; }
                 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(225, 29, 72, 0); } 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); } }
                 .btn-sidebar.btn-green { background: #10b981; color: white; border: none; }
                 .btn-sidebar.btn-green:hover { background: #059669; }
