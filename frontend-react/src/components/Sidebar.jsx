@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ColaboradorUpload from './ColaboradorUpload';
 
 const Sidebar = ({
     onEventChange,
@@ -22,7 +23,10 @@ const Sidebar = ({
     onToggleNews,    // New prop
     showNews,         // New prop
     onToggleInfrastructure, // New prop
-    showInfrastructure // New prop
+    showInfrastructure, // New prop
+    onToggleColaboradores, // New prop
+    showColaboradores, // New prop
+    onSearchColaborador // New prop
 }) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -84,6 +88,10 @@ const Sidebar = ({
                     🚑 {!isCollapsed && (showInfrastructure ? 'Ocultar Ayuda' : 'Ayuda/Emergencia')}
                 </button>
 
+                <button onClick={onToggleColaboradores} className={`btn-sidebar ${showColaboradores ? 'active-teal' : ''}`} title="Colaboradores">
+                    👥 {!isCollapsed && (showColaboradores ? 'Ocultar Personal' : 'Colaboradores')}
+                </button>
+
                 {/* Sismos Control Group */}
                 <div style={{ display: 'flex', gap: '5px', flexDirection: isCollapsed ? 'column' : 'row' }}>
                     <button onClick={onToggleEarthquakes} className={`btn-sidebar ${showEarthquakes ? 'active-red' : ''}`} style={{ flex: 1, justifyContent: isCollapsed ? 'center' : 'flex-start' }} title="Sismos">
@@ -136,9 +144,34 @@ const Sidebar = ({
                 <button onClick={onToggleNews} className={`btn-sidebar ${showNews ? 'active' : ''}`} style={{ background: showNews ? '#e0f2fe' : 'white', color: showNews ? '#0284c7' : 'inherit', border: showNews ? '1px solid #7dd3fc' : '1px solid #e2e8f0' }} title="Noticias">
                     📰 {!isCollapsed && "Noticias"}
                 </button>
+
+                {/* Search Bar for Colaboradores - Only visible when expanded and layer active (optional condition) */}
+                {!isCollapsed && (
+                    <div style={{ marginTop: '10px', paddding: '5px' }}>
+                        <input
+                            type="text"
+                            placeholder="🔍 Buscar colaborador..."
+                            onChange={(e) => onSearchColaborador && onSearchColaborador(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '8px',
+                                borderRadius: '6px',
+                                border: '1px solid #cbd5e1',
+                                fontSize: '0.9rem'
+                            }}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Expansible Alerts Panel (Bottom) - Only show if not collapsed or make it pop over? For now hide if collapsed to avoid mess */}
+            {!isCollapsed && (
+                <div style={{ padding: '0 10px 10px 10px', borderTop: '1px solid #f1f5f9' }}>
+                    <h4 style={{ margin: '10px 0 5px 0', fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase' }}>Gestión de Personal</h4>
+                    <ColaboradorUpload />
+                </div>
+            )}
+
             {!isCollapsed && (
                 <div style={{ padding: '20px', overflowY: 'auto', borderTop: '1px solid #f1f5f9' }}>
                     {/* Seismic Alerts Panel */}
@@ -188,6 +221,7 @@ const Sidebar = ({
                 .btn-sidebar.active-blue { background: #0ea5e9; color: white; border-color: #0ea5e9; }
                 .btn-sidebar.active-orange { background: #f97316; color: white; border-color: #f97316; }
                 .btn-sidebar.active-purple { background: #7c3aed; color: white; border-color: #7c3aed; }
+                .btn-sidebar.active-teal { background: #0d9488; color: white; border-color: #0d9488; }
                 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(225, 29, 72, 0); } 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); } }
                 .btn-sidebar.btn-green { background: #10b981; color: white; border: none; }
                 .btn-sidebar.btn-green:hover { background: #059669; }

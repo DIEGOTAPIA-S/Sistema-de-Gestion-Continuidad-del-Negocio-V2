@@ -11,12 +11,15 @@ import { getSedes } from '../services/sedeService';
 import { createEvento } from '../services/eventoService';
 import { generatePDFReport } from '../utils/reportGenerator';
 import { toPng } from 'html-to-image';
+import { fetchInfrastructureNearPoint } from '../services/infrastructureService'; // New Service
 import EarthquakeLayer from '../components/EarthquakeLayer'; // Importar capa de sismos
 import WeatherLayer from '../components/WeatherLayer'; // Importar capa de clima
 import NewsFeed from '../components/NewsFeed'; // Importar componente de noticias
 import InstructionsModal from '../components/InstructionsModal'; // Importar modal de instrucciones
 import EventRegistrationPanel from '../components/EventRegistrationPanel'; // Importar nuevo panel de eventos
-import InfrastructureLayer from '../components/InfrastructureLayer'; // Importar capa de infraestructura
+import InfrastructureLayer from '../components/InfrastructureLayer';
+import ColaboradoresLayer from '../components/ColaboradoresLayer'; // Importar capa de colaboradores
+import { fetchColaboradores } from '../services/colaboradoresService'; // Importar servicio
 
 const MapDashboard = () => {
     const { user, logout } = useAuth();
@@ -56,6 +59,34 @@ const MapDashboard = () => {
     const [emergencyAlert, setEmergencyAlert] = useState(null); // State for the popup
     const [focusLocation, setFocusLocation] = useState(null); // State for map FlyTo
 
+    // Colaboradores State
+    const [showColaboradores, setShowColaboradores] = useState(false);
+    const [colaboradores, setColaboradores] = useState([]);
+    const [searchTerm, setSearchTerm] = useState(''); // Estado para búsqueda
+
+    // Filter Colaboradores
+    const filteredColaboradores = colaboradores.filter(c => {
+        if (!searchTerm) return true;
+        const term = searchTerm.toLowerCase();
+        return (
+            (c.nombres && c.nombres.toLowerCase().includes(term)) ||
+            (c.apellidos && c.apellidos.toLowerCase().includes(term)) ||
+            (c.cargo && c.cargo.toLowerCase().includes(term)) ||
+            (c.area && c.area.toLowerCase().includes(term)) ||
+            (c.compania && c.compania.toLowerCase().includes(term)) ||
+            (c.identificacion && c.identificacion.includes(term))
+        );
+    });
+
+    // Load Colaboradores on toggle
+    useEffect(() => {
+        if (showColaboradores && colaboradores.length === 0) {
+            fetchColaboradores()
+                .then(data => setColaboradores(data))
+                .catch(err => console.error("Error loading colaboradores:", err));
+        }
+    }, [showColaboradores]);
+
     useEffect(() => {
         if (earthquakeAlerts.length > 0) {
             // Check for ANY events (Mag > 2.0) in the last hour
@@ -71,16 +102,18 @@ const MapDashboard = () => {
     useEffect(() => {
         getSedes()
             .then(data => {
+                console.log("Sedes fetched successfully:", data); // DEBUG
                 if (Array.isArray(data)) {
                     setSedes(data);
                     setFilteredSedes(data);
                 } else {
+                    console.warn("Sedes data is not an array:", data); // DEBUG
                     setSedes([]);
                     setFilteredSedes([]);
                 }
             })
             .catch(err => {
-                console.error("Error en MapDashboard:", err);
+                console.error("Error en MapDashboard al cargar sedes:", err);
                 setSedes([]);
                 setFilteredSedes([]);
             });
@@ -159,7 +192,37 @@ const MapDashboard = () => {
                 }
             }
 
-            generatePDFReport(reportSedes, affectedSedes, nearbySedes, eventDetails, user, mapImg, chartsImg, infrastructurePoints);
+            // Ensure infrastructure data is available
+            let reportInfrastructure = infrastructurePoints;
+
+            // If manual layer is empty/off, and we have affected/nearby sedes, auto-fetch
+            if ((!reportInfrastructure || reportInfrastructure.length === 0) && (affectedSedes.length > 0 || nearbySedes.length > 0)) {
+                try {
+                    const targetSedes = affectedSedes.length > 0 ? affectedSedes : nearbySedes;
+                    const uniquePoints = new Map();
+
+                    // Fetch for ALL target sedes (using Promise.all for speed)
+                    const promises = targetSedes.map(sede =>
+                        fetchInfrastructureNearPoint(sede.latitud, sede.longitud, 5) // 5km radius
+                    );
+
+                    const results = await Promise.all(promises);
+
+                    results.flat().forEach(point => {
+                        if (!uniquePoints.has(point.id)) {
+                            uniquePoints.set(point.id, point);
+                        }
+                    });
+
+                    reportInfrastructure = Array.from(uniquePoints.values());
+                    console.log(`Auto-fetched ${reportInfrastructure.length} infrastructure points for report.`);
+
+                } catch (infraErr) {
+                    console.warn("Could not auto-fetch infrastructure for report:", infraErr);
+                }
+            }
+
+            generatePDFReport(reportSedes, affectedSedes, nearbySedes, eventDetails, user, mapImg, chartsImg, reportInfrastructure);
         } catch (error) {
             console.error("Error generating report:", error);
             alert("Error general al generar el reporte: " + error.message);
@@ -282,6 +345,9 @@ const MapDashboard = () => {
                     showNews={showNews}
                     onToggleInfrastructure={() => setShowInfrastructure(!showInfrastructure)}
                     showInfrastructure={showInfrastructure}
+                    onToggleColaboradores={() => setShowColaboradores(!showColaboradores)}
+                    showColaboradores={showColaboradores}
+                    onSearchColaborador={setSearchTerm}
                 />
 
                 {/* Right Content Area (Scrollable) */}
@@ -297,8 +363,10 @@ const MapDashboard = () => {
                             focusLocation={focusLocation}
                         >
                             <EarthquakeLayer visible={showEarthquakes} onAlertsUpdate={setEarthquakeAlerts} />
+                            {/* Debugging Weather Layer: visible={showWeather} sedes.length={sedes.length} */}
                             <WeatherLayer visible={showWeather} sedes={sedes} />
                             <InfrastructureLayer visible={showInfrastructure} onUpdate={setInfrastructurePoints} />
+                            <ColaboradoresLayer visible={showColaboradores} colaboradores={filteredColaboradores} />
                         </MapComponent>
 
                         {/* Waze Traffic Overlay */}

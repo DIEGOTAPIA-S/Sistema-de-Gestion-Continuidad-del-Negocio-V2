@@ -36,7 +36,7 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
         if (mapImg) {
             doc.setFontSize(12);
             doc.setTextColor(15, 23, 42);
-            doc.text("📍 Mapa del Evento", 14, currentY);
+            doc.text("Mapa del Evento", 14, currentY);
             currentY += 5;
 
             const mapHeight = 80; // Fixed height for map
@@ -69,7 +69,7 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
 
             doc.setFontSize(12);
             doc.setTextColor(15, 23, 42);
-            doc.text("📊 Estadísticas de Impacto", 14, currentY);
+            doc.text("Estadisticas de Impacto", 14, currentY);
             currentY += 5;
 
             const chartHeight = 70;
@@ -141,31 +141,105 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
         };
 
         // Render Tables
-        renderTable('🚨 Sedes Afectadas (Zona Directa)', affectedSedes, [220, 38, 38]); // Red
-        renderTable('⚠️ Sedes Cercanas (< 2km)', nearbySedes, [234, 88, 12]); // Orange
+        renderTable('Sedes Afectadas (Zona Directa)', affectedSedes, [220, 38, 38]); // Red
+        renderTable('Sedes Cercanas (< 2km)', nearbySedes, [234, 88, 12]); // Orange
 
-        // --- Infrastructure Table ---
-        if (infrastructurePoints && infrastructurePoints.length > 0) {
-            doc.setFontSize(12);
-            doc.setTextColor(15, 23, 42);
-            doc.text("🚑 Infraestructura de Apoyo Identificada", 14, currentY);
-            currentY += 5;
+        // --- Infrastructure Table (Grouped by Sede) ---
+        const reportInfrastructure = infrastructurePoints;
 
-            const infraBody = infrastructurePoints.map(p => [
-                p.type === 'police' ? 'Policía' : (p.type === 'fire_station' ? 'Bomberos' : 'Salud'),
-                p.name,
-                `${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}`
-            ]);
+        if (reportInfrastructure && reportInfrastructure.length > 0) {
 
-            autoTable(doc, {
-                startY: currentY,
-                head: [['Tipo', 'Nombre / Descripción', 'Ubicación']],
-                body: infraBody,
-                theme: 'striped',
-                headStyles: { fillColor: [75, 85, 99], textColor: 255 }, // Gray
-                styles: { fontSize: 8 },
-                columnStyles: { 0: { fontStyle: 'bold', width: 30 } }
-            });
+            // Determine target sedes (Affected or Nearby)
+            const targetSedes = (affectedSedes && affectedSedes.length > 0) ? affectedSedes : (nearbySedes || []);
+
+            // Helper for distance
+            const getDistance = (lat1, lon1, lat2, lon2) => {
+                const R = 6371; // km
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return R * c;
+            };
+
+            if (targetSedes.length > 0) {
+                // Loop through each sede to show its specific context
+                targetSedes.forEach((sede) => {
+                    // Check if page break needed
+                    if (currentY > 250) {
+                        doc.addPage();
+                        currentY = 20;
+                    }
+
+                    doc.setFontSize(11);
+                    doc.setTextColor(30, 64, 175); // Blue-800
+                    doc.text(`Infraestructura mas cercana a: ${sede.nombre}`, 14, currentY);
+                    currentY += 5;
+
+                    // Calculate distances from THIS sede to all points
+                    let localPoints = reportInfrastructure.map(p => ({
+                        ...p,
+                        dist: getDistance(parseFloat(sede.latitud), parseFloat(sede.longitud), p.lat, p.lon)
+                    }));
+
+                    // Sort and take top 5
+                    localPoints.sort((a, b) => a.dist - b.dist);
+                    const topPoints = localPoints.slice(0, 5);
+
+                    const infraBody = topPoints.map(p => [
+                        p.type === 'police' ? 'Policia' : (p.type === 'fire_station' ? 'Bomberos' : 'Salud'),
+                        p.name,
+                        p.phone || 'No registrado', // Phone Column
+                        `${p.dist.toFixed(2)} km`
+                    ]);
+
+                    autoTable(doc, {
+                        startY: currentY,
+                        head: [['Tipo', 'Nombre / Descripcion', 'Contacto', 'Distancia Aprox.']],
+                        body: infraBody,
+                        theme: 'striped',
+                        headStyles: { fillColor: [75, 85, 99], textColor: 255 }, // Gray
+                        styles: { fontSize: 8 },
+                        columnStyles: {
+                            0: { fontStyle: 'bold', width: 30 },
+                            2: { width: 40 } // Width for Contact
+                        },
+                        didDrawPage: (data) => {
+                            // This callback handles page breaks inside the table itself
+                        }
+                    });
+
+                    currentY = doc.lastAutoTable.finalY + 10;
+                });
+            } else {
+                // Fallback if no specific sede context
+                doc.setFontSize(11);
+                doc.setTextColor(15, 23, 42);
+                doc.text("Infraestructura Visible en el Mapa", 14, currentY);
+                currentY += 5;
+
+                const infraBody = reportInfrastructure.slice(0, 10).map(p => [
+                    p.type === 'police' ? 'Policia' : (p.type === 'fire_station' ? 'Bomberos' : 'Salud'),
+                    p.name,
+                    p.phone || 'No registrado', // Phone Column
+                    `${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}`
+                ]);
+
+                autoTable(doc, {
+                    startY: currentY,
+                    head: [['Tipo', 'Nombre / Descripcion', 'Contacto', 'Ubicacion']],
+                    body: infraBody,
+                    theme: 'striped',
+                    headStyles: { fillColor: [75, 85, 99], textColor: 255 },
+                    styles: { fontSize: 8 },
+                    columnStyles: {
+                        0: { fontStyle: 'bold', width: 30 },
+                        2: { width: 40 }
+                    }
+                });
+            }
         }
 
         doc.save(`Reporte_Continuidad_${new Date().getTime()}.pdf`);

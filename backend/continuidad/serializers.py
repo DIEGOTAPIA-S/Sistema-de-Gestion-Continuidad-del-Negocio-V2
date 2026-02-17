@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import Sede, Proceso, Evento, UserProfile
-from .models import Sede, Proceso, Evento, UserProfile
+from .models import Sede, Proceso, Evento, Colaborador, UserProfile
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -32,6 +31,16 @@ class EventoSerializer(serializers.ModelSerializer):
         model = Evento
         fields = ['id', 'tipo', 'descripcion', 'fecha', 'nivel_alerta', 'geometria', 'sedes_afectadas', 'sedes_afectadas_ids', 'creado_por']
 
+
+
+
+class ColaboradorSerializer(serializers.ModelSerializer):
+    sede_nombre = serializers.ReadOnlyField(source='sede_asignada.nombre')
+
+    class Meta:
+        model = Colaborador
+        fields = ['id', 'nombres', 'apellidos', 'identificacion', 'cargo', 'area', 'gerencia', 
+                  'modalidad', 'direccion', 'telefono', 'email', 'compania', 'latitud', 'longitud', 'sede_asignada', 'sede_nombre']
 
 
 class UserSerializer(serializers.ModelSerializer):

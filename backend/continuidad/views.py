@@ -3,19 +3,18 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .models import Sede, Proceso, Evento
+from .models import Sede, Proceso, Evento, Colaborador
 from .serializers import (SedeSerializer, ProcesoSerializer, EventoSerializer, 
                           UserSerializer, UserCreateSerializer, UserUpdateSerializer,
-                          CustomTokenObtainPairSerializer)
+                          CustomTokenObtainPairSerializer, ColaboradorSerializer)
 from .permissions import IsAdminRole, IsAnalistaRole
+import pandas as pd
+import json
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
-    """
-    API para gestión de usuarios. Solo admins.
-    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAdminRole]
@@ -39,11 +38,6 @@ class UserViewSet(viewsets.ModelViewSet):
         return UserSerializer
 
 class SedeViewSet(viewsets.ModelViewSet):
-    """
-    API CRUD para Sedes.
-    Lectura: Analistas/Admins/Autenticados
-    Escritura: Solo Admins
-    """
     queryset = Sede.objects.all()
     serializer_class = SedeSerializer
     
@@ -53,7 +47,6 @@ class SedeViewSet(viewsets.ModelViewSet):
         return [permissions.IsAuthenticated()]
 
 class ProcesoViewSet(viewsets.ModelViewSet):
-    """API CRUD para Procesos."""
     queryset = Proceso.objects.all()
     serializer_class = ProcesoSerializer
 
@@ -63,19 +56,93 @@ class ProcesoViewSet(viewsets.ModelViewSet):
         return [permissions.IsAuthenticated()]
 
 class EventoViewSet(viewsets.ModelViewSet):
-    """API CRUD para Eventos."""
     queryset = Evento.objects.all()
     serializer_class = EventoSerializer
     
     def get_permissions(self):
-        # Crear: Cualquiera autenticado (Analista/Admin)
         if self.action == 'create':
             return [permissions.IsAuthenticated()]
-        # Borrar: Solo Admin
         if self.action == 'destroy':
             return [IsAdminRole()]
-        # Leer/Editar: Autenticado
         return [permissions.IsAuthenticated()]
+
+class ColaboradorViewSet(viewsets.ModelViewSet):
+    """
+    API CRUD para Colaboradores y Carga Masiva.
+    """
+    queryset = Colaborador.objects.all()
+    serializer_class = ColaboradorSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @action(detail=False, methods=['POST'])
+    def upload_excel(self, request):
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            df = pd.read_excel(file)
+            
+            # Chequeo flexible de columnas (minimo requerido)
+            required_cols = ['Identificacion', 'Nombres', 'Apellidos']
+            missing = [col for col in required_cols if col not in df.columns]
+            
+            if missing:
+                return Response({'error': f'Missing columns: {", ".join(missing)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+            created_count = 0
+            updated_count = 0
+            errors = []
+
+            for index, row in df.iterrows():
+                try:
+                    cedula = str(row['Identificacion']).strip()
+                    
+                    # Normalizar campos opcionales
+                    defaults = {
+                        'nombres': row['Nombres'],
+                        'apellidos': row['Apellidos'],
+                        'cargo': row.get('Cargo', ''),
+                        'area': row.get('Area', ''),
+                        'gerencia': row.get('Gerencia', ''),
+                        'modalidad': row.get('Modalidad', 'Presencial'),
+                        'direccion': row.get('Direccion', ''),
+                        'telefono': str(row.get('Telefono', '')).replace('.0', ''), # Excel floating point fix
+                        'email': row.get('Email', ''),
+                        'compania': row.get('Compañia', ''),
+                        'latitud': row.get('latitud') if pd.notna(row.get('latitud')) else None,
+                        'longitud': row.get('longitud') if pd.notna(row.get('longitud')) else None,
+                    }
+
+                    # Enlazar con Sede si existe
+                    sede_nombre = row.get('Sede_Asignada')
+                    if sede_nombre and pd.notna(sede_nombre):
+                        sede_obj = Sede.objects.filter(nombre__icontains=str(sede_nombre)).first()
+                        if sede_obj:
+                            defaults['sede_asignada'] = sede_obj
+
+                    obj, created = Colaborador.objects.update_or_create(
+                        identificacion=cedula,
+                        defaults=defaults
+                    )
+
+                    if created:
+                        created_count += 1
+                    else:
+                        updated_count += 1
+
+                except Exception as e:
+                    errors.append(f"Row {index}: {str(e)}")
+
+            return Response({
+                'status': 'success',
+                'created': created_count,
+                'updated': updated_count,
+                'errors': errors[:20] 
+            })
+
+        except Exception as e:
+            return Response({'error': f"Error processing file: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 from rest_framework.decorators import api_view, permission_classes
@@ -84,26 +151,16 @@ import feedparser
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_news(request):
-    """
-    Proxy para obtener noticias de Google News RSS.
-    Parametros: q (busqueda), por defecto 'Colombia Movilidad'
-    """
     query = request.GET.get('q', 'Colombia Movilidad')
-    # Codificar query para URL
     from urllib.parse import quote
     encoded_query = quote(query)
     
     rss_url = f"https://news.google.com/rss/search?q={encoded_query}&hl=es-419&gl=CO&ceid=CO:es-419"
     
-    print(f"Fetching RSS: {rss_url}") # DEBUG LOG
-    
     feed = feedparser.parse(rss_url)
     
-    print(f"Found {len(feed.entries)} entries") # DEBUG LOG
-
     news_items = []
-    for entry in feed.entries[:20]: # Limit 20
-        # Limpiar resumen (a veces trae HTML)
+    for entry in feed.entries[:20]:
         summary = entry.summary if 'summary' in entry else ''
         from django.utils.html import strip_tags
         clean_summary = strip_tags(summary)[:200] + '...' if len(summary) > 200 else strip_tags(summary)

@@ -3,7 +3,7 @@ import { Marker, Popup, useMapEvents } from 'react-leaflet';
 import axios from 'axios';
 import { policeIcon, fireIcon, hospitalIcon } from '../utils/mapIcons';
 
-const InfrastructureLayer = ({ visible }) => {
+const InfrastructureLayer = ({ visible, onUpdate }) => {
     const [points, setPoints] = useState([]);
     const [loading, setLoading] = useState(false);
     const [bounds, setBounds] = useState(null);
@@ -22,6 +22,13 @@ const InfrastructureLayer = ({ visible }) => {
             setBounds(map.getBounds());
         }
     }, [visible, map]);
+
+    // Sync with parent whenever points change
+    useEffect(() => {
+        if (onUpdate) {
+            onUpdate(points);
+        }
+    }, [points, onUpdate]);
 
     useEffect(() => {
         if (!visible || !bounds) {
@@ -58,7 +65,8 @@ const InfrastructureLayer = ({ visible }) => {
                     lat: el.lat || el.center.lat,
                     lon: el.lon || el.center.lon,
                     type: el.tags.amenity,
-                    name: el.tags.name || formatName(el.tags.amenity)
+                    name: el.tags.name || formatName(el.tags.amenity),
+                    phone: el.tags.phone || el.tags['contact:phone'] || 'No registrado'
                 }));
 
                 setPoints(data);

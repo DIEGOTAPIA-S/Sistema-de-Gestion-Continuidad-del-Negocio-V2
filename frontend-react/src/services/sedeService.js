@@ -10,8 +10,8 @@ export const getSedes = async () => {
             return [];
         }
     } catch (error) {
-        console.error("Error fetching sedes:", error);
-        return []; // Return empty array on error to prevent UI crash
+        console.error("Error fetching sedes (Detail):", error.response ? error.response.data : error.message);
+        return [];
     }
 };
 
@@ -40,7 +40,7 @@ export const deleteSede = async (id) => {
         const response = await api.delete(`/sedes/${id}/`);
         return response.data;
     } catch (error) {
-        console.error("Error deleting sede:", error);
+        console.error("Error fetching sedes (Detail):", error.response ? error.response.data : error.message);
         throw error;
     }
 };

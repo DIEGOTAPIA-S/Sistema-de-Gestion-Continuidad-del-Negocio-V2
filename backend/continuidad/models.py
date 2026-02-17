@@ -38,21 +38,37 @@ class Proceso(models.Model):
 
 class Colaborador(models.Model):
     """Colaborador de la organización con ubicación (residencia/trabajo)."""
-    nombre = models.CharField(max_length=200)
+    MODALIDAD_CHOICES = [
+        ('Presencial', 'Presencial'),
+        ('Remoto', 'Remoto'),
+        ('Hibrido', 'Híbrido'),
+    ]
+
+    nombres = models.CharField(max_length=150)
+    apellidos = models.CharField(max_length=150)
     identificacion = models.CharField(max_length=50, unique=True, help_text='Cédula o ID único')
-    cargo = models.CharField(max_length=100, blank=True)
-    gerencia = models.CharField(max_length=100, blank=True)
+    
+    cargo = models.CharField(max_length=150, blank=True)
+    gerencia = models.CharField(max_length=150, blank=True)
+    area = models.CharField(max_length=150, blank=True)
+    
     sede_asignada = models.ForeignKey(Sede, on_delete=models.SET_NULL, null=True, blank=True, related_name='colaboradores')
+    modalidad = models.CharField(max_length=20, choices=MODALIDAD_CHOICES, default='Presencial')
+    
     direccion = models.CharField(max_length=300, blank=True, help_text='Dirección de residencia')
-    latitud = models.DecimalField(max_digits=9, decimal_places=6)
-    longitud = models.DecimalField(max_digits=9, decimal_places=6)
+    telefono = models.CharField(max_length=50, blank=True)
+    email = models.EmailField(max_length=150, blank=True)
+    compania = models.CharField(max_length=100, blank=True, help_text='Empresa a la que pertenece')
+    
+    latitud = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    longitud = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
     
     class Meta:
-        ordering = ['nombre']
+        ordering = ['apellidos', 'nombres']
         verbose_name_plural = 'Colaboradores'
 
     def __str__(self):
-        return f"{self.nombre} ({self.cargo})"
+        return f"{self.nombres} {self.apellidos} ({self.cargo})"
 
 
 class Evento(models.Model):
