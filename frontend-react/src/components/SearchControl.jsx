@@ -52,15 +52,16 @@ const SearchControl = () => {
     return (
         <div style={{
             position: 'absolute',
-            top: '20px',
-            left: '60px', // Right of zoom controls
+            top: '10px',
+            right: '50px', // Positioned to the left of the Zoom/Draw controls (approx 50px+)
             zIndex: 1000,
             background: 'white',
             padding: '5px',
             borderRadius: '4px',
             boxShadow: '0 1px 5px rgba(0,0,0,0.4)',
             display: 'flex',
-            gap: '5px'
+            gap: '5px',
+            marginRight: '10px' // Add some margin
         }}>
             <form onSubmit={handleSearch} style={{ display: 'flex', gap: '5px' }}>
                 <input

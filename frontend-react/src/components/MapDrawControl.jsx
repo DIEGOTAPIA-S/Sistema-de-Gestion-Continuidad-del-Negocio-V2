@@ -18,6 +18,7 @@ const MapDrawControl = ({ onCreated, onDeleted }) => {
 
         // Define options (only polygons and circles for zones)
         const drawControl = new L.Control.Draw({
+            position: 'topright', // Move to top-right
             edit: {
                 featureGroup: featureGroupRef.current,
                 remove: true,

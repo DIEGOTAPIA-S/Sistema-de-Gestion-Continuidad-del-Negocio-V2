@@ -20,6 +20,7 @@ import EventRegistrationPanel from '../components/EventRegistrationPanel'; // Im
 import InfrastructureLayer from '../components/InfrastructureLayer';
 import ColaboradoresLayer from '../components/ColaboradoresLayer'; // Importar capa de colaboradores
 import { fetchColaboradores } from '../services/colaboradoresService'; // Importar servicio
+import { downloadColaboradoresCSV } from '../utils/exportUtils'; // Importar utilidad de descarga
 import { booleanPointInPolygon, point } from '@turf/turf'; // Import Turf for analysis
 
 const MapDashboard = () => {
@@ -452,6 +453,29 @@ const MapDashboard = () => {
                                     */}
                     </div>
 
+
+                    {/* Active Risk Zone Summary (Above Event Summary) */}
+                    {(affectedSedes.length > 0 || nearbySedes.length > 0) && (
+                        <div style={{ margin: '20px 20px 0 20px', background: '#ffe4e6', padding: '15px', borderRadius: '8px', border: '1px solid #fca5a5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <h5 style={{ margin: '0 0 5px', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '1rem' }}>
+                                    🚨 Zona de Riesgo Activa
+                                </h5>
+                                <div style={{ fontSize: '0.95rem', color: '#7f1d1d', display: 'flex', gap: '20px' }}>
+                                    <div>🏢 <strong>{affectedSedes.length}</strong> Sedes Afectadas</div>
+                                    <div>👥 <strong>{affectedColaboradores.length}</strong> Empleados en Riesgo</div>
+                                </div>
+                            </div>
+                            {affectedColaboradores.length > 0 && (
+                                <button
+                                    onClick={() => downloadColaboradoresCSV(affectedColaboradores)}
+                                    style={{ background: 'white', border: '1px solid #cbd5e1', padding: '8px 15px', borderRadius: '6px', cursor: 'pointer', color: '#475569', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}
+                                >
+                                    📊 Descargar Excel
+                                </button>
+                            )}
+                        </div>
+                    )}
 
                     {/* Event Summary Box (Above Charts) */}
                     {(affectedSedes.length > 0 || nearbySedes.length > 0) && (

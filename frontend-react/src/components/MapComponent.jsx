@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'; // Added useMap
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet'; // Added useMap, ZoomControl
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import * as turf from '@turf/turf';
@@ -95,7 +95,8 @@ const MapComponent = ({ sedes, onAnalysisUpdate, children, focusLocation }) => {
 
     return (
         <div className="card" style={{ height: '100%', width: '100%', padding: 0, overflow: 'hidden', borderRadius: '0' }}>
-            <MapContainer center={[4.6097, -74.0817]} zoom={6} style={{ height: '100%', width: '100%' }} preferCanvas={true}>
+            <MapContainer center={[4.6097, -74.0817]} zoom={6} style={{ height: '100%', width: '100%' }} preferCanvas={true} zoomControl={false}> {/* Disable default Zoom */}
+                <ZoomControl position="topright" /> {/* Add custom Zoom at top-right */}
                 <MapController focusLocation={focusLocation} />
                 <SearchControl />
                 <TileLayer
