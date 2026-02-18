@@ -34,3 +34,13 @@ build/
 # Reports
 *.pdf
 *.csv
+
+# Excel
+*.xls
+*.xlsx
+
+# PyInstaller / Build
+*.spec
+backend/dist/
+backend/build/
+backend/__pycache__/

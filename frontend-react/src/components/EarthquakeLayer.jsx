@@ -16,16 +16,19 @@ const EarthquakeLayer = ({ visible, onAlertsUpdate }) => {
             setLoading(true);
             try {
                 const response = await axios.get(USGS_API_URL);
-                // Filtrar solo sismos relevantes para Colombia y fronteras
-                const colQuakes = response.data.features.filter(q => {
-                    const [lon, lat] = q.geometry.coordinates;
-                    // Bounding Box aproximado de Colombia + vecindad
-                    const inLat = lat >= -5 && lat <= 14;
-                    const inLon = lon >= -85 && lon <= -66;
-                    // O que diga explícitamente "Colombia"
-                    const nameMatch = q.properties.place && q.properties.place.toLowerCase().includes('colombia');
-                    return (inLat && inLon) || nameMatch;
-                });
+                // Filtro Estricto: Solo Colombia y sus fronteras directas
+                const nameMatch = q.properties.place && q.properties.place.toLowerCase().includes('colombia');
+
+                // Box 1: Colombia Continental (Aprox)
+                // Lat: -4.5 a 13.5 | Lon: -79.5 (Chocó/Nariño) a -66 (Orinoquía)
+                // Evita Panamá Central/Oeste, Ecuador profundo, Venezuela profunda
+                const inMainland = (lat >= -4.5 && lat <= 13.5) && (lon >= -79.5 && lon <= -66.5);
+
+                // Box 2: San Andrés y Providencia (Mar Caribe)
+                // Lat: 11.5 a 14.0 | Lon: -82.0 a -81.0
+                const inIslands = (lat >= 11.5 && lat <= 14.0) && (lon >= -82.0 && lon <= -81.0);
+
+                return nameMatch || inMainland || inIslands;
 
                 setEarthquakes(colQuakes);
 

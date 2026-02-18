@@ -235,12 +235,97 @@ const MapDrawer = ({
 
                             {showEarthquakes && (
                                 <div style={{ marginTop: '10px', padding: '10px', background: '#fff1f2', borderRadius: '8px', border: '1px solid #fecdd3' }}>
-                                    <button onClick={onSimulateAlert} style={{ width: '100%', padding: '8px', background: 'white', color: '#b91c1c', border: '1px solid #fecaca', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>
+                                    <button onClick={onSimulateAlert} style={{ width: '100%', padding: '8px', background: 'white', color: '#b91c1c', border: '1px solid #fecaca', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, marginBottom: '10px' }}>
                                         ⚠️ Simular Alerta Sísmica
                                     </button>
-                                    {earthquakeAlerts.length > 0 && (
+
+                                    {earthquakeAlerts.length > 0 ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+                                            <div style={{ fontSize: '0.8rem', color: '#be123c', fontWeight: 'bold', marginBottom: '5px' }}>
+                                                {earthquakeAlerts.length} Sismos Recientes (24h)
+                                            </div>
+                                            {earthquakeAlerts.map((quake, idx) => (
+                                                <div key={idx} style={{ background: 'white', padding: '8px', borderRadius: '6px', borderLeft: `4px solid ${quake.mag >= 5 ? '#dc2626' : '#f59e0b'}`, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontWeight: 'bold', color: '#991b1b' }}>M {quake.mag}</span>
+                                                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                                            {new Date(quake.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ fontSize: '0.85rem', color: '#1e293b', margin: '4px 0' }}>{quake.place}</div>
+                                                    <button
+                                                        onClick={() => {
+                                                            // Determine coordinates (Simulated vs Real)
+                                                            let coords = quake.coordinates;
+                                                            if (!coords && quake.place.includes("Simulacro")) {
+                                                                // Fallback for simulation mocks if coords missing in object
+                                                                if (quake.place.includes("Bogotá")) coords = [4.81, -74.07];
+                                                                else if (quake.place.includes("Pasto")) coords = [1.22, -77.37];
+                                                                else if (quake.place.includes("Santander")) coords = [6.79, -73.12];
+                                                                else coords = [4.71, -74.07];
+                                                            } else if (coords && coords.length === 3) {
+                                                                // GeoJSON is [Lon, Lat], Leaflet needs [Lat, Lon]
+                                                                // Wait, earthquakeAlerts from component usually come processed or raw?
+                                                                // If from USGS GeoJSON: coordinates are [Lon, Lat, Depth]
+                                                                // If from Simulation: might be [Lat, Lon]
+                                                                // Let's assume [Lon, Lat] based on standard GeoJSON, but check simulation logic
+                                                                // In main dashboard simulation: coords: [4.81, -74.07] (Lat, Lon)
+                                                                // In EarthquakeLayer.jsx: features.geometry.coordinates is [Lon, Lat]
+                                                                // We need to standardize.
+                                                                // Safe bet: if abs(coords[0]) > abs(coords[1]) -> [Lon, Lat] (Colombia is Lat ~4, Lon ~-74)
+                                                                // No, Lon is -74, Lat is 4. Abs(Lon) > Abs(Lat).
+
+                                                                // Checking if it's already Lat,Lon or Lon,Lat is tricky without context.
+                                                                // But typically `onLocate` expects { latitud, longitud } item or focusLocation expects [Lat, Lon]
+
+                                                                // Let's try to construct a 'target' object compatible with onLocate
+                                                            }
+
+                                                            // Simplest interaction: Call onLocate with formatted item
+                                                            // The Dashboard handleLocate expects: { latitud, longitud }
+
+                                                            let lat, lon;
+                                                            // Check if simulated (Lat, Lon)
+                                                            if (Array.isArray(quake.coordinates)) {
+                                                                if (quake.coordinates[1] < -20) {
+                                                                    // Most likely [Lat, Lon] where Lon is ~-70
+                                                                    lat = quake.coordinates[0];
+                                                                    lon = quake.coordinates[1];
+                                                                } else {
+                                                                    // Most likely [Lon, Lat] (GeoJSON)
+                                                                    lat = quake.coordinates[1];
+                                                                    lon = quake.coordinates[0];
+                                                                }
+                                                            } else {
+                                                                // Fallback for mocks
+                                                                lat = 4.71; lon = -74.07;
+                                                            }
+
+                                                            onLocate({ latitud: lat, longitud: lon });
+                                                        }}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '4px',
+                                                            background: '#fee2e2',
+                                                            color: '#b91c1c',
+                                                            border: '1px solid #fecaca',
+                                                            borderRadius: '4px',
+                                                            cursor: 'pointer',
+                                                            fontSize: '0.8rem',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            gap: '5px'
+                                                        }}
+                                                    >
+                                                        📍 Ver en Mapa
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
                                         <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#be123c', textAlign: 'center' }}>
-                                            {earthquakeAlerts.length} sismos detectados en 24h.
+                                            No hay sismos reportados en 24h.
                                         </div>
                                     )}
                                 </div>

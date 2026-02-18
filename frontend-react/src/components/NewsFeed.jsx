@@ -57,7 +57,7 @@ const NewsFeed = ({ isOpen, onClose }) => {
             maxWidth: '100vw',
             background: 'white',
             boxShadow: '-2px 0 10px rgba(0,0,0,0.1)',
-            zIndex: 1000,
+            zIndex: 5000,
             display: 'flex',
             flexDirection: 'column',
             transition: 'width 0.3s ease-in-out, transform 0.3s ease-in-out',
@@ -78,7 +78,13 @@ const NewsFeed = ({ isOpen, onClose }) => {
                         {isExpanded ? '⇥⇤' : '⇤⇥'}
                     </button>
                 </div>
-                <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+                <button
+                    onClick={onClose}
+                    title="Cerrar Noticias"
+                    style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                    &times;
+                </button>
             </div>
 
             {/* Tabs */}
