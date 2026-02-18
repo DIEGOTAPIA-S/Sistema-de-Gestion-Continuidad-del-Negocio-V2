@@ -88,24 +88,24 @@ def geocodificar_base_datos(input_file, output_file):
     print("👉 AHORA: Sube este archivo 'listo_para_subir.xlsx' en la pestaña 'Datos' de la aplicación.")
 
 if __name__ == "__main__":
-    # Nombre del archivo de entrada (cámbialo si tu archivo se llama diferente)
-    INPUT_FILE = "colaboradores_rrhh.xlsx" 
-    OUTPUT_FILE = "colaboradores_geocodificados.xlsx"
+    print("--- GEOCODIFICADOR DE DIRECCIONES ---")
+    print("Por favor, asegúrate de que el archivo Excel esté en esta misma carpeta.")
     
-    # Crear un archivo de prueba si no existe para que el usuario vea el formato
-    import os
-    if not os.path.exists(INPUT_FILE):
-        print(f"⚠️ No vi el archivo '{INPUT_FILE}', creando uno de ejemplo...")
-        dummy_data = {
-            'Identificacion': [123, 456, 789],
-            'Nombres': ['Juan', 'Maria', 'Pedro'],
-            'Apellidos': ['Perez', 'Gomez', 'Diaz'],
-            'Cargo': ['Analista', 'Gerente', 'Operario'],
-            'Direccion': ['Calle 100 # 8a-55', 'Carrera 7 # 32-10', 'Calle 26 # 69-76'],
-            'Ciudad': ['Bogotá', 'Bogotá', 'Bogotá'],
-            'Email': ['juan@test.com', 'maria@test.com', 'pedro@test.com']
-        }
-        pd.DataFrame(dummy_data).to_excel(INPUT_FILE, index=False)
-        print("✅ Archivo de ejemplo creado. Ejecuta de nuevo para procesarlo.")
+    # Opción 1: Preguntar nombre
+    while True:
+        input_name = input("✍️  Escribe el nombre del archivo (ej: nomina.xlsx): ").strip()
+        if input_name.endswith(".xlsx") or input_name.endswith(".xls"):
+            INPUT_FILE = input_name
+        else:
+            INPUT_FILE = input_name + ".xlsx"
+        
+        if os.path.exists(INPUT_FILE):
+            break
+        else:
+            print(f"❌ No encuentro '{INPUT_FILE}'. Intenta de nuevo.")
+
+    OUTPUT_FILE = "geocodificado_" + INPUT_FILE
     
     geocodificar_base_datos(INPUT_FILE, OUTPUT_FILE)
+    
+    input("\nPresiona ENTER para salir...")

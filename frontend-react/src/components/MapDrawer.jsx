@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
+import { useAuth } from '../context/AuthContext';
 import ColaboradorUpload from './ColaboradorUpload'; // Keeping for reference if needed, but likely removing usage
 import { downloadColaboradoresCSV } from '../utils/exportUtils';
-import { uploadColaboradoresExcel } from '../services/colaboradoresService';
+import { uploadColaboradoresExcel, deleteColaboradores } from '../services/colaboradoresService';
 
 const MapDrawer = ({
     activeTab,
@@ -36,6 +37,9 @@ const MapDrawer = ({
     // Local state for Search
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
+
+    // Auth Context
+    const { user } = useAuth();
 
     if (!activeTab) return null;
 
@@ -395,16 +399,40 @@ const MapDrawer = ({
                                 <span>Historial</span>
                             </button>
 
-                            <button onClick={handleUploadClick} className="btn-layer" disabled={uploading}>
-                                <span style={{ fontSize: '1.5rem' }}>{uploading ? '⏳' : '📤'}</span>
-                                <span>{uploading ? 'Cargando...' : 'Cargar Personal'}</span>
-                            </button>
+                            {/* Admin Only Actions */}
+                            {user && user.role === 'admin' && (
+                                <>
+                                    <button onClick={handleUploadClick} className="btn-layer" disabled={uploading}>
+                                        <span style={{ fontSize: '1.5rem' }}>{uploading ? '⏳' : '📤'}</span>
+                                        <span>{uploading ? 'Cargando...' : 'Cargar Personal'}</span>
+                                    </button>
 
-                            {(affectedColaboradores.length > 0) && (
-                                <button onClick={() => downloadColaboradoresCSV(affectedColaboradores)} className="btn-layer" style={{ gridColumn: 'span 2', borderColor: '#cbd5e1', background: '#f8fafc' }}>
-                                    <span style={{ fontSize: '1.5rem' }}>📊</span>
-                                    <span>Descargar Lista Afectada</span>
-                                </button>
+                                    <button
+                                        onClick={async () => {
+                                            if (confirm("⚠️ ¿Estás seguro de BORRAR TODA la base de datos de personal?\n\nEsta acción no se puede deshacer.")) {
+                                                try {
+                                                    await deleteColaboradores();
+                                                    alert("✅ Base de datos eliminada correctamente.");
+                                                    window.location.reload(); // Simple reload to clear map
+                                                } catch (e) {
+                                                    alert("Error eliminando base de datos.");
+                                                }
+                                            }
+                                        }}
+                                        className="btn-layer"
+                                        style={{ borderColor: '#fca5a5', color: '#b91c1c', background: '#fef2f2' }}
+                                    >
+                                        <span style={{ fontSize: '1.5rem' }}>🗑️</span>
+                                        <span>Borrar Base</span>
+                                    </button>
+
+                                    {(affectedColaboradores.length > 0) && (
+                                        <button onClick={() => downloadColaboradoresCSV(affectedColaboradores)} className="btn-layer" style={{ gridColumn: 'span 2', borderColor: '#cbd5e1', background: '#f8fafc' }}>
+                                            <span style={{ fontSize: '1.5rem' }}>📊</span>
+                                            <span>Descargar Lista Afectada</span>
+                                        </button>
+                                    )}
+                                </>
                             )}
                         </div>
 

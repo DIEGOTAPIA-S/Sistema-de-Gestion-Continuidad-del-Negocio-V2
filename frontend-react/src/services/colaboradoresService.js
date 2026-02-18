@@ -36,3 +36,15 @@ export const uploadColaboradoresExcel = async (file) => {
         throw error;
     }
 };
+
+export const deleteColaboradores = async () => {
+    try {
+        const response = await axios.delete(`${API_URL}delete_all/`, {
+            headers: getAuthHeaders()
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting colaboradores:", error);
+        throw error;
+    }
+};

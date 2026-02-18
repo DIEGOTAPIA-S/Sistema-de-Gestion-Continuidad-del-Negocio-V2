@@ -74,7 +74,7 @@ class ColaboradorViewSet(viewsets.ModelViewSet):
     serializer_class = ColaboradorSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=False, methods=['POST'])
+    @action(detail=False, methods=['POST'], permission_classes=[IsAdminRole])
     def upload_excel(self, request):
         file = request.FILES.get('file')
         if not file:
@@ -143,6 +143,15 @@ class ColaboradorViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({'error': f"Error processing file: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['DELETE'], permission_classes=[IsAdminRole])
+    def delete_all(self, request):
+        """
+        Elimina TODA la base de datos de colaboradores.
+        Solo permitido para Administradores.
+        """
+        count, _ = Colaborador.objects.all().delete()
+        return Response({'status': 'success', 'deleted': count, 'message': f'Se eliminaron {count} registros correctamente.'})
 
 
 from rest_framework.decorators import api_view, permission_classes

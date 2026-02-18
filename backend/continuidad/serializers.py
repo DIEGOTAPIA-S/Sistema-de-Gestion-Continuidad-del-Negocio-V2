@@ -42,6 +42,16 @@ class ColaboradorSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombres', 'apellidos', 'identificacion', 'cargo', 'area', 'gerencia', 
                   'modalidad', 'direccion', 'telefono', 'email', 'compania', 'latitud', 'longitud', 'sede_asignada', 'sede_nombre']
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        # Ocultar teléfono si no es admin
+        if request and hasattr(request.user, 'profile') and request.user.profile.role != 'admin':
+            data.pop('telefono', None)
+            
+        return data
+
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializador para ver usuarios."""
