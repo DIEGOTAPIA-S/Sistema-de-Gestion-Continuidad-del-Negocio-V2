@@ -28,12 +28,33 @@ const Login = () => {
     return (
         <div className="flex h-screen font-sans">
             {/* Left Side - Image/Brand */}
-            <div className="hidden lg:flex flex-1 relative flex-col justify-end p-10 bg-cover bg-center" style={{ backgroundImage: 'url("/login_background.png")' }}>
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-slate-900/20"></div>
+            {/* Left Side - Brand & Design */}
+            <div className="hidden lg:flex flex-1 relative flex-col justify-end p-10 overflow-hidden bg-slate-950">
+                {/* Abstract Background Design - Darker Blue with White Gradient Accents */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-blue-900 to-slate-950"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent"></div>
+
+                {/* Geometric Shapes - Increased Visibility */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-full h-96 bg-blue-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
+
+                {/* Grid Pattern Overlay */}
+                <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(#ffffff 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }}></div>
+
+                {/* Connecting Lines/Nodes (CSS Representation) - Stronger Borders */}
+                <div className="absolute top-1/4 left-1/4 w-32 h-32 border border-blue-400/30 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.2)]"></div>
+                <div className="absolute top-1/3 left-1/3 w-64 h-64 border border-white/10 rounded-full"></div>
+                <div className="absolute top-[20%] right-[20%] w-24 h-24 border border-blue-300/20 rounded-lg rotate-12"></div>
+
                 <div className="relative z-10 text-white">
-                    <h1 className="text-4xl font-extrabold mb-2 text-white">Continuidad del Negocio</h1>
-                    <p className="text-lg opacity-90 max-w-lg">
-                        Sistema de Gestión de Continuidad del Negocio
+                    <div className="mb-6 inline-block p-3 bg-blue-600/30 backdrop-blur-md rounded-xl border border-blue-400/40 shadow-lg">
+                        <span className="text-3xl">🌐</span>
+                    </div>
+                    <h1 className="text-5xl font-extrabold mb-4 text-white tracking-tight drop-shadow-md">
+                        Continuidad <span className="text-blue-400">del Negocio</span>
+                    </h1>
+                    <p className="text-xl text-slate-200 max-w-lg leading-relaxed font-light">
+                        Sistema de georreferenciación para la gestión de crisis.
                     </p>
                 </div>
             </div>
