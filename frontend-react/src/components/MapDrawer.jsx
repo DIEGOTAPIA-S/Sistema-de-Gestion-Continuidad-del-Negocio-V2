@@ -44,7 +44,7 @@ const MapDrawer = ({
     if (!activeTab) return null;
 
     const drawerStyle = {
-        width: '400px',
+        width: '400px', // Default for Desktop
         height: '100%',
         background: '#ffffff',
         borderRight: '1px solid #e2e8f0',
@@ -485,7 +485,7 @@ const MapDrawer = ({
     };
 
     return (
-        <div style={drawerStyle}>
+        <div style={drawerStyle} className="drawer-container">
             <div style={headerStyle}>
                 <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#334155' }}>
                     {activeTab === 'search' && 'Búsqueda'}
@@ -508,6 +508,18 @@ const MapDrawer = ({
             <div style={{ padding: '10px', borderTop: '1px solid #f1f5f9', textAlign: 'center', fontSize: '0.8rem', color: '#cbd5e1' }}>
                 Continuidad de Negocio v2.1
             </div>
+
+            <style>{`
+                @media (max-width: 768px) {
+                    .drawer-container {
+                        width: 100% !important;
+                        position: fixed !important;
+                        top: 0;
+                        left: 0;
+                        z-index: 2000 !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 };

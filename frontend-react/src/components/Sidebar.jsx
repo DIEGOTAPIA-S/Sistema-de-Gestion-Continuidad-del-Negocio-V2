@@ -22,13 +22,21 @@ const Sidebar = (props) => {
     const drawerWrapperStyle = {
         position: 'absolute',
         top: 0,
-        left: '60px', // Start after the dock
+        left: '60px', // Start after the dock (Desktop)
         height: '100%',
         zIndex: 1001
     };
 
     return (
         <div style={containerStyle}>
+            <style>{`
+                @media (max-width: 768px) {
+                    .drawer-wrapper {
+                        left: 0 !important;
+                        width: 100% !important;
+                    }
+                }
+            `}</style>
             <div style={dockWrapperStyle}>
                 <MapDock
                     activeTab={activeTab}
@@ -37,7 +45,7 @@ const Sidebar = (props) => {
             </div>
 
             {activeTab && (
-                <div style={drawerWrapperStyle}>
+                <div style={drawerWrapperStyle} className="drawer-wrapper">
                     <MapDrawer
                         activeTab={activeTab}
                         onClose={() => setActiveTab(null)}

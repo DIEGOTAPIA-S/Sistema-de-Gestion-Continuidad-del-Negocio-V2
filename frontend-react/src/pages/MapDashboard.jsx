@@ -300,18 +300,18 @@ const MapDashboard = () => {
     return (
         <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#f8fafc' }}>
             {/* Header */}
-            <header style={{ height: '64px', background: '#2563eb', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', zIndex: 1000 }}>
+            <header className="dashboard-header" style={{ height: '64px', background: '#2563eb', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', zIndex: 1000 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{ background: 'white', borderRadius: '50%', padding: '5px', height: '32px', width: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <span style={{ fontSize: '1.2rem' }}>🛡️</span>
                     </div>
                     <div>
-                        <h1 style={{ fontSize: '1.25rem', margin: 0, fontWeight: '700' }}>Sistema de Gestión Continuidad del Negocio</h1>
-                        <span style={{ fontSize: '0.75rem', opacity: 0.9 }}>Panel de Control</span>
+                        <h1 className="header-title" style={{ fontSize: '1.25rem', margin: 0, fontWeight: '700' }}>Sistema de Gestión Continuidad del Negocio</h1>
+                        <span className="header-subtitle" style={{ fontSize: '0.75rem', opacity: 0.9 }}>Panel de Control</span>
                     </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ textAlign: 'right' }}>
+                    <div className="user-info" style={{ textAlign: 'right' }}>
                         <span style={{ fontWeight: '600', fontSize: '0.9rem', display: 'block' }}>Bienvenido, {user?.name}</span>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{user?.role}</span>
                     </div>
@@ -319,16 +319,40 @@ const MapDashboard = () => {
                         {user?.role === 'admin' && (
                             <a href="/admin" style={{ textDecoration: 'none' }}>
                                 <button style={{ background: '#1e40af', border: '1px solid #1e3a8a', color: 'white', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    🛠️ Admin
+                                    🛠️ <span className="btn-text">Admin</span>
                                 </button>
                             </a>
                         )}
                         <button onClick={logout} style={{ background: '#dc2626', border: '1px solid #b91c1c', color: 'white', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            🚪 Salir
+                            🚪 <span className="btn-text">Salir</span>
                         </button>
                     </div>
                 </div>
             </header>
+
+            <style>{`
+                @media (max-width: 768px) {
+                    .dashboard-header {
+                        padding: 0 10px !important;
+                    }
+                    .header-title {
+                        font-size: 1rem !important;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        max-width: 180px;
+                    }
+                    .header-subtitle {
+                        display: none;
+                    }
+                    .user-info {
+                        display: none !important;
+                    }
+                    .btn-text {
+                        display: none;
+                    }
+                }
+            `}</style>
 
             <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
                 <Sidebar
