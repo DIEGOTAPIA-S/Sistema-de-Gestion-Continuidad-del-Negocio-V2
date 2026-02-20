@@ -4,6 +4,7 @@ from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 import time
 import sys
+import os
 
 def geocodificar_base_datos(input_file, output_file):
     """

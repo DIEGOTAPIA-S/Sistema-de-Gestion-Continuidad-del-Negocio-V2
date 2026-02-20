@@ -56,7 +56,16 @@ MIDDLEWARE = [
 ]
 
 # CORS - Allow React frontend during development
+# CORS - Allow React frontend during development
 CORS_ALLOW_ALL_ORIGINS = True
+
+# CSRF - Allow Ngrok for remote demo
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://*.ngrok-free.app',
+    'https://*.ngrok.io',
+]
 
 ROOT_URLCONF = 'config.urls'
 
@@ -104,6 +113,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+    {
+        'NAME': 'continuidad.validators.CustomPasswordValidator',
     },
 ]
 

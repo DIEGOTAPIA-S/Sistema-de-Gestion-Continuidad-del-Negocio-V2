@@ -84,7 +84,24 @@ const Login = () => {
                         </div>
 
                         <div>
-                            <label className="block mb-2 text-sm font-semibold text-slate-700">Contraseña</label>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="text-sm font-semibold text-slate-700">Contraseña</label>
+                                <div className="group relative">
+                                    <span className="cursor-help text-xs text-blue-500 font-medium bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                                        ℹ️ Requisitos
+                                    </span>
+                                    <div className="absolute right-0 bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                                        <p className="font-bold mb-1">Política de Seguridad:</p>
+                                        <ul className="list-disc list-inside space-y-0.5 text-slate-300">
+                                            <li>Mínimo 8 caracteres</li>
+                                            <li>Al menos 1 Mayúscula (A-Z)</li>
+                                            <li>Al menos 1 Número (0-9)</li>
+                                            <li>Al menos 1 Símbolo (@#$%)</li>
+                                        </ul>
+                                        <div className="absolute right-4 -bottom-1 w-2 h-2 bg-slate-800 transform rotate-45"></div>
+                                    </div>
+                                </div>
+                            </div>
                             <input
                                 type="password"
                                 value={password}
