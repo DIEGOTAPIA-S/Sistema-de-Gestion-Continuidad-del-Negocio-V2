@@ -4,6 +4,7 @@ import { getUsers, createUser, deleteUser, changePassword } from '../services/us
 import { getSedes, createSede, updateSede, deleteSede } from '../services/sedeService';
 import ProcessManagementModal from '../components/ProcessManagementModal';
 import AdminSearchControl from '../components/AdminSearchControl';
+import TwoFactorSetup from '../components/TwoFactorSetup';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -195,6 +196,12 @@ const AdminPanel = () => {
                         onClick={() => setActiveTab('sedes')}
                     >
                         Sedes
+                    </button>
+                    <button
+                        className={`pb-4 px-4 font-medium text-sm transition-colors border-b-2 ${activeTab === 'security' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                        onClick={() => setActiveTab('security')}
+                    >
+                        Seguridad
                     </button>
                 </div>
 
@@ -399,6 +406,21 @@ const AdminPanel = () => {
                                     </div>
                                 </form>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'security' && (
+                    <div className="max-w-2xl mx-auto space-y-6">
+                        <TwoFactorSetup />
+
+                        <div className="bg-amber-50 border border-amber-200 p-6 rounded-xl">
+                            <h4 className="text-amber-800 font-bold mb-2 flex items-center gap-2">
+                                <span>⚠️</span> Recomendación
+                            </h4>
+                            <p className="text-sm text-amber-700 leading-relaxed">
+                                Si habilita el 2FA, asegúrese de tener instalada la aplicación <strong>Microsoft Authenticator</strong> en su dispositivo móvil. No pierda acceso a la aplicación, ya que el sistema le solicitará el código en cada inicio de sesión por seguridad.
+                            </p>
                         </div>
                     </div>
                 )}

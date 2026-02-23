@@ -10,9 +10,41 @@ from .serializers import (SedeSerializer, ProcesoSerializer, EventoSerializer,
 from .permissions import IsAdminRole, IsAnalistaRole
 import pandas as pd
 import json
+from django_otp import user_has_device
+from django.core.cache import cache
+import uuid
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            # Esto verificará las credenciales estándar
+            serializer.is_valid(raise_exception=True)
+        except Exception:
+            # Si las credenciales fallan, dejamos que DRF responda con 401 normalmente
+            from axes.models import AccessAttempt
+            return super().post(request, *args, **kwargs)
+
+        user = serializer.user
+        
+        # Verificar si el usuario tiene 2FA habilitado
+        if user_has_device(user):
+            # No entregar tokens aún. Entregar pre_auth_id.
+            pre_auth_id = str(uuid.uuid4())
+            # Guardar el ID en caché por 5 minutos
+            cache.set(f'pre_auth_{pre_auth_id}', user.id, timeout=300)
+            
+            return Response({
+                'two_factor_required': True,
+                'pre_auth_id': pre_auth_id,
+                'username': user.username
+            }, status=status.HTTP_200_OK)
+
+        # Si no tiene 2FA, login normal (super().post devolverá los tokens)
+        return super().post(request, *args, **kwargs)
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()

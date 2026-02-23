@@ -42,6 +42,9 @@ INSTALLED_APPS = [
     'corsheaders',
     'axes',
     'auditlog',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
+    'django_otp.plugins.otp_static',
     # Local
     'continuidad',
 ]
@@ -55,6 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'axes.middleware.AxesMiddleware',
     'auditlog.middleware.AuditlogMiddleware',
 ]
@@ -153,7 +157,6 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
     ],
 }
 
@@ -175,3 +178,22 @@ AXES_COOLOFF_TIME = 24         # Bloqueo por 24 horas
 AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
 AXES_RESET_ON_SUCCESS = True   # Limpiar contador al entrar con éxito
 AXES_ONLY_USER_FAILURES = True # No bloquear la IP completa, solo el usuario en esa IP
+
+# --- SEGURIDAD AVANZADA ---
+
+# Email Backend (Consola para pruebas, cambiar a SMTP en producción)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'seguridad@continuidad.corp'
+
+# Cabeceras de Seguridad (HTTPS/SSL)
+# Nota: Estas se activan solo si el sitio corre en HTTPS (ej: Ngrok o Prod)
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+# Descomentar en producción real con HTTPS:
+# SECURE_HSTS_SECONDS = 31536000
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
+# SECURE_SSL_REDIRECT = True
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True

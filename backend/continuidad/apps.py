@@ -6,6 +6,7 @@ class ContinuidadConfig(AppConfig):
     name = 'continuidad'
 
     def ready(self):
+        import continuidad.signals # Importar señales de seguridad
         from auditlog.registry import auditlog
         from .models import Sede, Proceso, Colaborador, Evento
         auditlog.register(Sede)

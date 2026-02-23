@@ -22,32 +22,83 @@ export const AuthProvider = ({ children }) => {
     const login = async (username, password) => {
         try {
             const res = await api.post('/token/', { username, password });
-            const { access, refresh, full_name, role } = res.data;
 
-            localStorage.setItem('token', access);
-            localStorage.setItem('refresh_token', refresh);
-            localStorage.setItem('user_name', full_name);
-            localStorage.setItem('role', role);
-
-            setUser({ name: full_name, role });
-            return { success: true };
-        } catch (error) {
-            console.error("Login error", error);
-
-            // Extraer mensaje detallado si existe
-            let message = "Credenciales inválidas o error de conexión";
-
-            if (error.response) {
-                if (error.response.status === 403) {
-                    message = "Cuenta bloqueada por seguridad tras demasiados intentos fallidos. Por favor, comuníquese con el administrador o espere 24 horas.";
-                } else if (error.response.data && error.response.data.detail) {
-                    message = error.response.data.detail === "No active account found with the given credentials"
-                        ? "Usuario o contraseña incorrectos. Verifique sus datos."
-                        : error.response.data.detail;
-                }
+            if (res.data.two_factor_required) {
+                return {
+                    success: true,
+                    requires2FA: true,
+                    preAuthId: res.data.pre_auth_id,
+                    username: res.data.username
+                };
             }
 
-            return { success: false, message };
+            const { access, refresh, full_name, role } = res.data;
+            saveAuthData(access, refresh, full_name, role);
+            return { success: true };
+        } catch (error) {
+            return handleAuthError(error);
+        }
+    };
+
+    const verifyOTP = async (preAuthId, token) => {
+        try {
+            const res = await api.post('/2fa/verify/', { pre_auth_id: preAuthId, token });
+            const { access, refresh, full_name, role } = res.data;
+
+            saveAuthData(access, refresh, full_name, role);
+            return { success: true };
+        } catch (error) {
+            return handleAuthError(error);
+        }
+    };
+
+    const saveAuthData = (access, refresh, name, role) => {
+        localStorage.setItem('token', access);
+        localStorage.setItem('refresh_token', refresh);
+        localStorage.setItem('user_name', name);
+        localStorage.setItem('role', role);
+        setUser({ name, role });
+    };
+
+    const handleAuthError = (error) => {
+        console.error("Auth error", error);
+        let message = "Credenciales inválidas o error de conexión al servidor";
+
+        if (error.response) {
+            const data = error.response.data;
+            if (error.response.status === 403) {
+                if (data && data.detail && data.detail.includes("locked")) {
+                    message = "Cuenta bloqueada por seguridad tras demasiados intentos fallidos. Espere 24 horas.";
+                } else {
+                    message = "Acceso denegado. Verifique sus permisos o intente de nuevo.";
+                }
+            } else if (data) {
+                if (data.error) {
+                    message = data.error;
+                } else if (data.detail) {
+                    // Si el detail es un objeto o tiene el mensaje estándar de DRF
+                    if (typeof data.detail === 'string' && data.detail.includes("No active account")) {
+                        message = "Usuario o contraseña incorrectos. Verifique sus datos.";
+                    } else {
+                        message = String(data.detail);
+                    }
+                } else if (data.non_field_errors) {
+                    message = data.non_field_errors[0];
+                }
+            }
+        } else if (error.request) {
+            message = "No se pudo contactar con el servidor. Verifique que el servicio esté activo.";
+        }
+
+        return { success: false, message };
+    };
+
+    const sendEmailOTP = async (preAuthId) => {
+        try {
+            await api.post('/2fa/send-email/', { pre_auth_id: preAuthId });
+            return { success: true };
+        } catch (error) {
+            return handleAuthError(error);
         }
     };
 
@@ -57,7 +108,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, verifyOTP, sendEmailOTP, loading }}>
             {children}
         </AuthContext.Provider>
     );
