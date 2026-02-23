@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     # Third-party
     'rest_framework',
     'corsheaders',
+    'axes',
+    'auditlog',
     # Local
     'continuidad',
 ]
@@ -53,6 +55,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
+    'auditlog.middleware.AuditlogMiddleware',
 ]
 
 # CORS - Allow React frontend during development
@@ -158,3 +162,16 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
+
+# Autenticación y Seguridad avanzada
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# Configuración de AXES (Protección contra fuerza bruta)
+AXES_FAILURE_LIMIT = 5         # Bloqueo tras 5 intentos
+AXES_COOLOFF_TIME = 24         # Bloqueo por 24 horas
+AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
+AXES_RESET_ON_SUCCESS = True   # Limpiar contador al entrar con éxito
+AXES_ONLY_USER_FAILURES = True # No bloquear la IP completa, solo el usuario en esa IP

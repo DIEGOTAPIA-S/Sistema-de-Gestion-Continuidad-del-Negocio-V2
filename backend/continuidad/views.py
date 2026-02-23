@@ -62,9 +62,18 @@ class EventoViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == 'create':
             return [permissions.IsAuthenticated()]
-        if self.action == 'destroy':
+        if self.action in ['destroy', 'delete_all']:
             return [IsAdminRole()]
         return [permissions.IsAuthenticated()]
+
+    @action(detail=False, methods=['DELETE'], permission_classes=[IsAdminRole])
+    def delete_all(self, request):
+        """
+        Elimina TODA la base de datos de eventos (Historial).
+        Solo permitido para Administradores.
+        """
+        count, _ = Evento.objects.all().delete()
+        return Response({'status': 'success', 'deleted': count, 'message': f'Se eliminaron {count} registros correctamente.'})
 
 class ColaboradorViewSet(viewsets.ModelViewSet):
     """

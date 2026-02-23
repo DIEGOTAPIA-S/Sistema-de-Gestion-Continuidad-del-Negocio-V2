@@ -19,3 +19,13 @@ export const createEvento = async (eventoData) => {
         throw error;
     }
 };
+
+export const deleteEventos = async () => {
+    try {
+        const response = await api.delete('/eventos/delete_all/');
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting eventos:", error);
+        throw error;
+    }
+};

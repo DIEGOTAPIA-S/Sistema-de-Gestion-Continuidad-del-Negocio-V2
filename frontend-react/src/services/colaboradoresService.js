@@ -1,17 +1,8 @@
-import axios from 'axios';
-
-const API_URL = 'http://localhost:8000/api/colaboradores/';
-
-const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-};
+import api from './api';
 
 export const fetchColaboradores = async () => {
     try {
-        const response = await axios.get(API_URL, {
-            headers: getAuthHeaders()
-        });
+        const response = await api.get('/colaboradores/');
         return response.data;
     } catch (error) {
         console.error("Error fetching colaboradores:", error);
@@ -24,9 +15,8 @@ export const uploadColaboradoresExcel = async (file) => {
     formData.append('file', file);
 
     try {
-        const response = await axios.post(`${API_URL}upload_excel/`, formData, {
+        const response = await api.post('/colaboradores/upload_excel/', formData, {
             headers: {
-                ...getAuthHeaders(),
                 'Content-Type': 'multipart/form-data'
             }
         });
@@ -39,9 +29,7 @@ export const uploadColaboradoresExcel = async (file) => {
 
 export const deleteColaboradores = async () => {
     try {
-        const response = await axios.delete(`${API_URL}delete_all/`, {
-            headers: getAuthHeaders()
-        });
+        const response = await api.delete('/colaboradores/delete_all/');
         return response.data;
     } catch (error) {
         console.error("Error deleting colaboradores:", error);

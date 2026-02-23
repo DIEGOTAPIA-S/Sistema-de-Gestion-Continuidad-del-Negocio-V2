@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import ColaboradorUpload from './ColaboradorUpload'; // Keeping for reference if needed, but likely removing usage
 import { downloadColaboradoresCSV } from '../utils/exportUtils';
 import { uploadColaboradoresExcel, deleteColaboradores } from '../services/colaboradoresService';
+import { deleteEventos } from '../services/eventoService';
 
 const MapDrawer = ({
     activeTab,
@@ -412,18 +413,37 @@ const MapDrawer = ({
                                             if (confirm("⚠️ ¿Estás seguro de BORRAR TODA la base de datos de personal?\n\nEsta acción no se puede deshacer.")) {
                                                 try {
                                                     await deleteColaboradores();
-                                                    alert("✅ Base de datos eliminada correctamente.");
-                                                    window.location.reload(); // Simple reload to clear map
+                                                    alert("✅ Personal eliminado correctamente.");
+                                                    window.location.reload();
                                                 } catch (e) {
-                                                    alert("Error eliminando base de datos.");
+                                                    alert("Error eliminando personal.");
                                                 }
                                             }
                                         }}
                                         className="btn-layer"
                                         style={{ borderColor: '#fca5a5', color: '#b91c1c', background: '#fef2f2' }}
                                     >
-                                        <span style={{ fontSize: '1.5rem' }}>🗑️</span>
-                                        <span>Borrar Base</span>
+                                        <span style={{ fontSize: '1.5rem' }}>👥🗑️</span>
+                                        <span>Borrar Personal</span>
+                                    </button>
+
+                                    <button
+                                        onClick={async () => {
+                                            if (confirm("⚠️ ¿Estás seguro de BORRAR TODO el historial de eventos (Simulacros)?\n\nEsto limpiará el mapa de marcas y polígonos.")) {
+                                                try {
+                                                    await deleteEventos();
+                                                    alert("✅ Historial de eventos eliminado.");
+                                                    window.location.reload();
+                                                } catch (e) {
+                                                    alert("Error eliminando historial.");
+                                                }
+                                            }
+                                        }}
+                                        className="btn-layer"
+                                        style={{ borderColor: '#fca5a5', color: '#b91c1c', background: '#fef2f2' }}
+                                    >
+                                        <span style={{ fontSize: '1.5rem' }}>📍🗑️</span>
+                                        <span>Borrar Historial</span>
                                     </button>
 
                                     {(affectedColaboradores.length > 0) && (
