@@ -121,8 +121,19 @@ const Login = () => {
                         </button>
 
                         {error && (
-                            <div className="mt-5 p-3 bg-red-50 rounded-lg text-red-700 text-sm flex items-center gap-2">
-                                ⚠️ {error}
+                            <div className={`mt-5 p-4 rounded-xl text-sm flex items-start gap-3 border ${error.includes('bloqueada')
+                                    ? 'bg-orange-50 text-orange-800 border-orange-200'
+                                    : 'bg-red-50 text-red-700 border-red-200'
+                                }`}>
+                                <span className="text-xl">
+                                    {error.includes('bloqueada') ? '🔒' : '⚠️'}
+                                </span>
+                                <div>
+                                    <p className="font-bold mb-0.5">
+                                        {error.includes('bloqueada') ? 'Acceso Restringido' : 'Error de Ingreso'}
+                                    </p>
+                                    <p className="leading-relaxed">{error}</p>
+                                </div>
                             </div>
                         )}
                     </form>

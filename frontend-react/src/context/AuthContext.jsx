@@ -33,7 +33,21 @@ export const AuthProvider = ({ children }) => {
             return { success: true };
         } catch (error) {
             console.error("Login error", error);
-            return { success: false, message: "Credenciales inválidas o error de conexión" };
+
+            // Extraer mensaje detallado si existe
+            let message = "Credenciales inválidas o error de conexión";
+
+            if (error.response) {
+                if (error.response.status === 403) {
+                    message = "Cuenta bloqueada por seguridad tras demasiados intentos fallidos. Por favor, comuníquese con el administrador o espere 24 horas.";
+                } else if (error.response.data && error.response.data.detail) {
+                    message = error.response.data.detail === "No active account found with the given credentials"
+                        ? "Usuario o contraseña incorrectos. Verifique sus datos."
+                        : error.response.data.detail;
+                }
+            }
+
+            return { success: false, message };
         }
     };
 
