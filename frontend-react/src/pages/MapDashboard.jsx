@@ -10,7 +10,7 @@ import AffectedListTable from '../components/AffectedListTable'; // New Componen
 import { getSedes } from '../services/sedeService';
 import { createEvento } from '../services/eventoService';
 import { generatePDFReport } from '../utils/reportGenerator';
-import { toPng } from 'html-to-image';
+import html2canvas from 'html2canvas';
 import { fetchInfrastructureNearPoint } from '../services/infrastructureService'; // New Service
 import EarthquakeLayer from '../components/EarthquakeLayer'; // Importar capa de sismos
 import WeatherLayer from '../components/WeatherLayer'; // Importar capa de clima
@@ -174,24 +174,26 @@ const MapDashboard = () => {
             const mapElement = document.getElementById('map-capture');
             let mapImg = null;
             if (mapElement) {
-                // Wait a moment for map to settle
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Wait a bit more for map tiles to load fully
+                await new Promise(resolve => setTimeout(resolve, 1500));
 
                 try {
-                    // Using html-to-image which handles modern CSS (like oklch) better
-                    mapImg = await toPng(mapElement, {
-                        cacheBust: true,
-                        width: mapElement.offsetWidth,
-                        height: mapElement.offsetHeight,
-                        // Avoid issues with webgl/canvas tainting
-                        filter: (node) => !node.classList?.contains('leaflet-control-container')
+                    const canvas = await html2canvas(mapElement, {
+                        useCORS: true,
+                        allowTaint: false, // Critical: true prevents toDataURL from working if any tile is cross-origin
+                        logging: false,
+                        backgroundColor: '#ffffff',
+                        ignoreElements: (node) =>
+                            node.classList?.contains('leaflet-control-container') ||
+                            node.classList?.contains('leaflet-draw-toolbar')
                     });
+                    mapImg = canvas.toDataURL('image/png');
                 } catch (mapErr) {
-                    console.error("Error capturing Map:", mapErr);
-                    alert(`Error captura Mapa (html-to-image): ${mapErr.message}`);
+                    console.error("Error capturing Map (html2canvas):", mapErr);
+                    // Silently fail if map capture fails, but don't crash report
                 }
             } else {
-                alert("Error: No se encontró el elemento del mapa en el DOM.");
+                console.warn("Captura omitida: Elemento del mapa no encontrado.");
             }
 
             // Capture Charts
@@ -200,12 +202,16 @@ const MapDashboard = () => {
             if (showCharts) {
                 if (chartsElement) {
                     try {
-                        chartsImg = await toPng(chartsElement, { backgroundColor: '#ffffff' });
+                        const canvas = await html2canvas(chartsElement, {
+                            useCORS: true,
+                            backgroundColor: '#ffffff'
+                        });
+                        chartsImg = canvas.toDataURL('image/png');
                     } catch (chartErr) {
-                        console.error("Error capturing Charts:", chartErr);
-                        alert(`Error captura Gráficas: ${chartErr.message}`);
+                        console.error("Error capturing Charts (html2canvas):", chartErr);
                     }
-                } else {
+                }
+                else {
                     alert("Advertencia: Gráficas activas pero no encontradas para captura.");
                 }
             }

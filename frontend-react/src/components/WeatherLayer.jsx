@@ -112,6 +112,7 @@ const WeatherLayer = ({ sedes, visible }) => {
                     attribution='&copy; <a href="https://www.rainviewer.com/api.html">RainViewer</a>'
                     opacity={0.6}
                     zIndex={10} // Above base map, below markers
+                    crossOrigin="anonymous"
                 />
             )}
 

@@ -102,6 +102,7 @@ const MapComponent = ({ sedes, onAnalysisUpdate, children, focusLocation }) => {
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    crossOrigin="anonymous"
                 />
                 {children}
                 <MapDrawControl onCreated={handleZoneCreated} onDeleted={handleZoneDeleted} />
