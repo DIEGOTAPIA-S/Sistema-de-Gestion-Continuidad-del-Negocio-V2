@@ -49,7 +49,7 @@ const SedeListModal = ({ sedes, onClose }) => {
                                             <div style={{ padding: '12px', width: '40%', borderRight: '1px solid #e2e8f0' }}>Proceso</div>
                                             <div style={{ padding: '12px', width: '30%', borderRight: '1px solid #e2e8f0' }}>Criticidad</div>
                                             <div style={{ padding: '12px', width: '15%', borderRight: '1px solid #e2e8f0' }}>RTO</div>
-                                            <div style={{ padding: '12px', width: '15%' }}>RPO</div>
+                                            <div style={{ padding: '12px', width: '15%' }}>MTPD</div>
                                         </div>
                                     </th>
                                 </tr>
@@ -91,7 +91,7 @@ const SedeListModal = ({ sedes, onClose }) => {
                                                                     <strong>RTO:</strong> {p.rto}h
                                                                 </td>
                                                                 <td style={{ padding: '8px 12px', width: '15%', fontSize: '0.85rem', color: '#64748b' }}>
-                                                                    <strong>RPO:</strong> {p.rpo || '-'}h
+                                                                    <strong>MTPD:</strong> {p.rpo || '-'}h
                                                                 </td>
                                                             </tr>
                                                         ))}

@@ -39,7 +39,7 @@ const AffectedListTable = ({ affectedSedes = [], nearbySedes = [] }) => {
                             <th style={{ padding: '12px 16px', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>Procesos Críticos</th>
                             <th style={{ padding: '12px 16px', textAlign: 'center', borderBottom: '2px solid #e2e8f0' }}>Criticidad</th>
                             <th style={{ padding: '12px 16px', textAlign: 'center', borderBottom: '2px solid #e2e8f0' }}>RTO</th>
-                            <th style={{ padding: '12px 16px', textAlign: 'center', borderBottom: '2px solid #e2e8f0' }}>RPO</th>
+                            <th style={{ padding: '12px 16px', textAlign: 'center', borderBottom: '2px solid #e2e8f0' }}>MTPD</th>
                         </tr>
                     </thead>
                     <tbody>

@@ -153,7 +153,7 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
 
             autoTable(doc, {
                 startY: currentY,
-                head: [['Sede', 'Ciudad', 'Proceso', 'Criticidad', 'RTO', 'RPO']],
+                head: [['Sede', 'Ciudad', 'Proceso', 'Criticidad', 'RTO', 'MTPD']],
                 body: tableBody,
                 theme: 'grid',
                 headStyles: { fillColor: headerColor, textColor: 255, fontStyle: 'bold' },

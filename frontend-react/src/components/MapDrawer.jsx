@@ -228,7 +228,7 @@ const MapDrawer = ({
                             </button>
                             <button onClick={onToggleInfrastructure} className={`btn-layer ${showInfrastructure ? 'active-purple' : ''}`} style={{ gridColumn: 'span 2' }}>
                                 <span style={{ fontSize: '1.5rem' }}>🚑</span>
-                                <span>Infraestructura / Ayuda</span>
+                                <span>Red de apoyo</span>
                             </button>
                         </div>
 
@@ -372,7 +372,7 @@ const MapDrawer = ({
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
                             <button onClick={onToggleCharts} className={`btn-layer ${showCharts ? 'active' : ''}`}>
                                 <span style={{ fontSize: '1.5rem' }}>📊</span>
-                                <span>{showCharts ? 'Ocultar Gráficas' : 'Ver Gráficas en Mapa'}</span>
+                                <span>{showCharts ? 'Ocultar Informe' : 'Generar Informe de Afectación'}</span>
                             </button>
                         </div>
                         <p style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '10px', textAlign: 'justify' }}>

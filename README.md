@@ -60,7 +60,7 @@ La aplicación web estará disponible en: `http://localhost:5173/` (o el puerto 
     *   Detección automática de sedes dentro (Afectadas) y cercanas (< 2km) al evento.
 3.  **Reportes PDF Avanzados**:
     *   Generación de reportes con capturas de pantalla del mapa y gráficas.
-    *   Tablas detalladas con RTO, RPO y Criticidad.
+    *   Tablas detalladas con RTO, MTPD y Criticidad.
 4.  **Historial de Eventos**: Registro y consulta de eventos pasados.
 5.  **Métricas en Tiempo Real**: Gráficas de barras y pastel sobre el impacto del evento.
 6.  **Admin Module & Seguridad**: Gestión de usuarios, sedes y configuración de 2FA.

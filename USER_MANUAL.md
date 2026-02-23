@@ -50,7 +50,7 @@ Este manual describe cómo utilizar las nuevas funcionalidades del sistema de co
 
 ## 4. Listado de Sedes
 - Haz clic en **"📋 Listado Sedes"** para ver una tabla completa de todas las sedes registradas.
-- La tabla muestra detalles de **RTO** (Tiempo Objetivo de Recuperación) y **RPO** (Punto Objetivo de Recuperación) por separado.
+- La tabla muestra detalles de **RTO** (Tiempo Objetivo de Recuperación) y **MTPD** (Punto Objetivo de Recuperación) por separado.
 
 ## 5. Administración (Solo Admins)
 - Haz clic en el engranaje (⚙️) en el encabezado.

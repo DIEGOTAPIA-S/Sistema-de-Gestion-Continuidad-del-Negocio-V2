@@ -76,7 +76,7 @@ const ProcessManagementModal = ({ sede, onClose, onUpdate }) => {
                                     <th style={{ padding: '12px', width: '30%' }}>Proceso</th>
                                     <th style={{ padding: '12px', width: '20%' }}>Criticidad</th>
                                     <th style={{ padding: '12px', width: '15%' }}>RTO (h)</th>
-                                    <th style={{ padding: '12px', width: '15%' }}>RPO (h)</th>
+                                    <th style={{ padding: '12px', width: '15%' }}>MTPD (h)</th>
                                     <th style={{ padding: '12px', width: '20%' }}>Acciones</th>
                                 </tr>
                             </thead>
@@ -146,7 +146,7 @@ const ProcessManagementModal = ({ sede, onClose, onUpdate }) => {
                                     <input type="number" value={form.rto} onChange={e => setForm({ ...form, rto: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', fontWeight: '500', color: '#475569' }}>RPO (Horas)</label>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', fontWeight: '500', color: '#475569' }}>MTPD (Horas)</label>
                                     <input type="number" value={form.rpo} onChange={e => setForm({ ...form, rpo: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
                                 </div>
                             </div>
