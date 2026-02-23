@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { getUsers, createUser, deleteUser, changePassword } from '../services/userService';
 import { getSedes, createSede, updateSede, deleteSede } from '../services/sedeService';
 import ProcessManagementModal from '../components/ProcessManagementModal';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import AdminSearchControl from '../components/AdminSearchControl';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -22,6 +23,17 @@ const LocationMarker = ({ position, setPosition }) => {
     });
 
     return position ? <Marker position={position} /> : null;
+};
+
+// Componente para forzar el movimiento de la cámara si el estado cambia externamente
+const MapFollower = ({ center }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (center && center[0] && center[1]) {
+            map.setView(center, map.getZoom());
+        }
+    }, [center, map]);
+    return null;
 };
 
 const AdminPanel = () => {
@@ -118,16 +130,34 @@ const AdminPanel = () => {
 
     const handleRefreshSedes = () => {
         loadData();
-        // If we are managing processes, we might need to update the passed sede object.
-        // But loadData updates 'sedes'. managingProcessesSede is a separate object state.
-        // We should update it to reflect new processes.
         if (managingProcessesSede) {
-            // Find the updated sede in the new list (we need to wait for state update or re-fetch specifically)
             getSedes().then(updatedSedes => {
                 setSedes(updatedSedes);
                 const updated = updatedSedes.find(s => s.id === managingProcessesSede.id);
                 if (updated) setManagingProcessesSede(updated);
             });
+        }
+    };
+
+    const handleQuickSearch = async () => {
+        if (!sedeForm.direccion) {
+            alert("Escriba una dirección primero.");
+            return;
+        }
+        try {
+            const searchStr = `${sedeForm.direccion}, ${sedeForm.ciudad || 'Colombia'}`;
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchStr)}&limit=1`);
+            const data = await response.json();
+            if (data && data.length > 0) {
+                const { lat, lon } = data[0];
+                const newPos = [parseFloat(lat), parseFloat(lon)];
+                setSedeForm({ ...sedeForm, latitud: newPos[0], longitud: newPos[1] });
+                setMapCenter(newPos);
+            } else {
+                alert("No se encontró la ubicación exacta. Intente ser más específico.");
+            }
+        } catch (e) {
+            alert("Error al buscar dirección. Verifique su conexión.");
         }
     };
 
@@ -142,8 +172,8 @@ const AdminPanel = () => {
                         </div>
                         <h1 className="text-xl font-bold text-slate-800">Panel de Administración</h1>
                     </div>
-                    <button 
-                        onClick={() => window.location.href = '/'} 
+                    <button
+                        onClick={() => window.location.href = '/'}
                         className="text-slate-500 hover:text-blue-600 hover:bg-slate-50 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 font-medium"
                     >
                         <span>⬅️</span> Volver al Mapa
@@ -154,13 +184,13 @@ const AdminPanel = () => {
             <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
                 {/* Tabs */}
                 <div className="flex gap-4 mb-8 border-b border-slate-200">
-                    <button 
+                    <button
                         className={`pb-4 px-4 font-medium text-sm transition-colors border-b-2 ${activeTab === 'users' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
                         onClick={() => setActiveTab('users')}
                     >
                         Usuarios
                     </button>
-                    <button 
+                    <button
                         className={`pb-4 px-4 font-medium text-sm transition-colors border-b-2 ${activeTab === 'sedes' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
                         onClick={() => setActiveTab('sedes')}
                     >
@@ -182,17 +212,17 @@ const AdminPanel = () => {
                                             <span className="text-xs text-slate-400 uppercase tracking-wider">{u.role}</span>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button 
+                                            <button
                                                 onClick={() => {
                                                     const newPwd = prompt("Nueva contraseña para " + u.username);
                                                     if (newPwd) handleChangePassword(u.id, newPwd);
-                                                }} 
+                                                }}
                                                 className="px-3 py-1 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded border border-amber-200 transition-colors"
                                             >
                                                 🔑 Clave
                                             </button>
-                                            <button 
-                                                onClick={() => handleDeleteUser(u.id)} 
+                                            <button
+                                                onClick={() => handleDeleteUser(u.id)}
                                                 className="px-3 py-1 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 rounded border border-red-200 transition-colors"
                                             >
                                                 Eliminar
@@ -211,38 +241,38 @@ const AdminPanel = () => {
                                 <form onSubmit={handleCreateUser} className="flex flex-col gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Nombre de Usuario</label>
-                                        <input 
+                                        <input
                                             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                                            placeholder="Ej. juan.perez" 
-                                            value={newUser.username} 
-                                            onChange={e => setNewUser({ ...newUser, username: e.target.value })} 
-                                            required 
+                                            placeholder="Ej. juan.perez"
+                                            value={newUser.username}
+                                            onChange={e => setNewUser({ ...newUser, username: e.target.value })}
+                                            required
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Contraseña</label>
-                                        <input 
+                                        <input
                                             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                                            type="password" 
-                                            placeholder="••••••••" 
-                                            value={newUser.password} 
-                                            onChange={e => setNewUser({ ...newUser, password: e.target.value })} 
-                                            required 
+                                            type="password"
+                                            placeholder="••••••••"
+                                            value={newUser.password}
+                                            onChange={e => setNewUser({ ...newUser, password: e.target.value })}
+                                            required
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Rol</label>
-                                        <select 
+                                        <select
                                             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
-                                            value={newUser.role} 
+                                            value={newUser.role}
                                             onChange={e => setNewUser({ ...newUser, role: e.target.value })}
                                         >
                                             <option value="analista">Analista</option>
                                             <option value="admin">Administrador</option>
                                         </select>
                                     </div>
-                                    <button 
-                                        type="submit" 
+                                    <button
+                                        type="submit"
                                         className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg shadow-sm hover:shadow transition-all active:scale-[0.98]"
                                     >
                                         Crear Usuario
@@ -289,7 +319,7 @@ const AdminPanel = () => {
 
                         {/* Formulario de Sede */}
                         <div className="bg-white rounded-xl shadow-sm border border-slate-200 h-fit sticky top-24">
-                             <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                                 <h3 className="font-semibold text-slate-800">{editingSede ? 'Editar Sede' : 'Registrar Nueva Sede'}</h3>
                                 {editingSede && <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded font-medium">Editando</span>}
                             </div>
@@ -306,7 +336,17 @@ const AdminPanel = () => {
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Dirección</label>
-                                            <input className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ej. Cra 7 #32-15" value={sedeForm.direccion} onChange={e => setSedeForm({ ...sedeForm, direccion: e.target.value })} required />
+                                            <div className="flex gap-1">
+                                                <input className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ej. Cra 7 #32-15" value={sedeForm.direccion} onChange={e => setSedeForm({ ...sedeForm, direccion: e.target.value })} required />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleQuickSearch}
+                                                    title="Ubicar en el mapa"
+                                                    className="px-3 bg-slate-100 border border-slate-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                                                >
+                                                    🔍
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -315,9 +355,22 @@ const AdminPanel = () => {
                                             <span>Ubicación Exacta</span>
                                             <span className="text-xs text-slate-400 font-normal">Haga clic en el mapa</span>
                                         </label>
-                                        <div className="h-64 rounded-lg overflow-hidden border border-slate-300 shadow-inner mb-3">
+                                        <div className="h-64 rounded-lg overflow-hidden border border-slate-300 shadow-inner mb-3 relative">
                                             <MapContainer center={mapCenter} zoom={11} style={{ height: '100%', width: '100%' }}>
                                                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                                <MapFollower center={mapCenter} />
+                                                <AdminSearchControl
+                                                    onLocationFound={(data) => {
+                                                        const newPos = [data.lat, data.lng];
+                                                        setSedeForm({
+                                                            ...sedeForm,
+                                                            latitud: data.lat,
+                                                            longitud: data.lng,
+                                                            direccion: data.address.split(',')[0]
+                                                        });
+                                                        setMapCenter(newPos);
+                                                    }}
+                                                />
                                                 <LocationMarker
                                                     position={[sedeForm.latitud, sedeForm.longitud]}
                                                     setPosition={(pos) => setSedeForm({ ...sedeForm, latitud: pos.lat, longitud: pos.lng })}
