@@ -11,6 +11,7 @@ Sistema avanzado para la gestión de la continuidad del negocio, análisis de im
 *   **Frontend**: React 18, Vite, React Router, TailwindCSS (o similar).
 *   **Mapas**: Leaflet.js + React-Leaflet + Turf.js (Análisis Espacial).
 *   **Gráficos**: Recharts.
+*   **Seguridad**: JWT, 2FA (TOTP/Email), Django Axes (Brute force protection), Seguridad en Headers.
 *   **Reportes**: jsPDF + AutoTable + html2canvas (Capturas de Pantalla).
 
 ## 📋 Requisitos Previos
@@ -62,7 +63,8 @@ La aplicación web estará disponible en: `http://localhost:5173/` (o el puerto 
     *   Tablas detalladas con RTO, RPO y Criticidad.
 4.  **Historial de Eventos**: Registro y consulta de eventos pasados.
 5.  **Métricas en Tiempo Real**: Gráficas de barras y pastel sobre el impacto del evento.
-6.  **Admin Module**: Gestión de usuarios y sedes desde el frontend.
+6.  **Admin Module & Seguridad**: Gestión de usuarios, sedes y configuración de 2FA.
+7.  **Protección Avanzada**: Sistema contra fuerza bruta y notificaciones de seguridad.
 
 ## 📂 Estructura del Proyecto
 

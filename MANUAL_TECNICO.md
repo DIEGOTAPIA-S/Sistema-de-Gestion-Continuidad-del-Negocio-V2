@@ -12,9 +12,11 @@ El sistema sigue una arquitectura moderna de **Single Page Application (SPA)**:
     *   Estilos: CSS Moderno (Variables CSS) / TailwindCSS (Opcional).
     *   Mapas: React-Leaflet + Turf.js para análisis geoespacial.
     *   Estado: Context API + Hooks.
-*   **Backend (API REST)**: Python Django 5 + Django REST Framework.
-    *   Autenticación: JWT (JSON Web Tokens).
-    *   Base de Datos: SQLite (Desarrollo) / PostgreSQL (Producción).
+*   **Seguridad**: 
+    *   Auth: JWT (JSON Web Tokens).
+    *   2FA: Autenticación de dos pasos con TOTP (Google/Microsoft Authenticator) y respaldo por Email.
+    *   Hardening: Django-axes para bloqueo de IP/usuarios ante ataques.
+*   **Base de Datos**: SQLite (Desarrollo) / PostgreSQL (Producción).
 
 ---
 

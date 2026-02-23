@@ -11,10 +11,17 @@ Para ingresar, acceda a la URL proporcionada por el administrador (ej. `http://l
 **Credenciales por defecto:**
 *   Usuario: `admin`
 *   Contraseña: `admin123` (o la asignada por sistemas)
+*   **Segundo Factor (2FA)**: Al ingresar, si tiene el 2FA activo, deberá ingresar el código de 6 dígitos de su aplicación (Microsoft Authenticator) o solicitar envío por correo.
 
 ---
 
-## 2. Funcionalidades Principales
+## 2. Configuración de Seguridad (2FA)
+
+Para proteger su cuenta:
+1. Ingrese a la pestaña **Seguridad** en el panel lateral.
+2. Active el "Segundo Factor de Autenticación".
+3. Escanee el código QR con **Microsoft Authenticator** (Verá el nombre "SG Continuidad").
+4. Confirme el código inicial para activar.
 
 ### 🗺️ Dashboard Geoespacial
 Visualice todas las sedes operativas en el mapa.
