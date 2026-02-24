@@ -174,41 +174,64 @@ const MapDashboard = () => {
             const mapElement = document.getElementById('map-capture');
             let mapImg = null;
             if (mapElement) {
-                // Wait a bit more for map tiles to load fully
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                // Critical: Scroll to top to avoid offset bugs during capture
+                window.scrollTo(0, 0);
+
+                // Wait for rendering
+                await new Promise(resolve => setTimeout(resolve, 2000));
 
                 try {
+                    console.log("Iniciando captura de mapa sanitizada con html2canvas...");
+
                     const canvas = await html2canvas(mapElement, {
                         useCORS: true,
-                        allowTaint: false, // Critical: true prevents toDataURL from working if any tile is cross-origin
+                        allowTaint: false,
                         logging: false,
                         backgroundColor: '#ffffff',
+                        scale: window.devicePixelRatio,
+                        onclone: (clonedDoc) => {
+                            // SANITIZATION: Remove modern CSS functions that html2canvas doesn't support
+                            const styleTags = clonedDoc.getElementsByTagName('style');
+                            for (let tag of styleTags) {
+                                tag.innerHTML = tag.innerHTML.replace(/oklch\([^)]+\)/g, '#3b82f6'); // Blue fallback
+                                tag.innerHTML = tag.innerHTML.replace(/oklab\([^)]+\)/g, '#3b82f6');
+                            }
+                        },
                         ignoreElements: (node) =>
                             node.classList?.contains('leaflet-control-container') ||
                             node.classList?.contains('leaflet-draw-toolbar')
                     });
-                    mapImg = canvas.toDataURL('image/png');
+
+                    if (canvas) {
+                        mapImg = canvas.toDataURL('image/png');
+                        console.log("Captura de mapa exitosa");
+                    }
                 } catch (mapErr) {
-                    console.error("Error capturing Map (html2canvas):", mapErr);
-                    // Silently fail if map capture fails, but don't crash report
+                    console.error("Error capturando Mapa (html2canvas sanitized):", mapErr);
                 }
             } else {
                 console.warn("Captura omitida: Elemento del mapa no encontrado.");
             }
 
             // Capture Charts
-            const chartsElement = document.getElementById('charts-capture');
             let chartsImg = null;
             if (showCharts) {
+                const chartsElement = document.getElementById('charts-capture');
                 if (chartsElement) {
                     try {
                         const canvas = await html2canvas(chartsElement, {
                             useCORS: true,
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#ffffff',
+                            onclone: (clonedDoc) => {
+                                const styleTags = clonedDoc.getElementsByTagName('style');
+                                for (let tag of styleTags) {
+                                    tag.innerHTML = tag.innerHTML.replace(/oklch\([^)]+\)/g, '#ffffff');
+                                }
+                            }
                         });
                         chartsImg = canvas.toDataURL('image/png');
                     } catch (chartErr) {
-                        console.error("Error capturing Charts (html2canvas):", chartErr);
+                        console.error("Error capturing Charts:", chartErr);
                     }
                 }
                 else {
