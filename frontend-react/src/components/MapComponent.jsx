@@ -60,8 +60,9 @@ const MapComponent = ({ sedes, onAnalysisUpdate, children, focusLocation }) => {
             let status = 'normal';
 
             const isInside = currentZones.some(zone => {
-                const polygon = turf.polygon(zone.geometry.coordinates);
-                return turf.booleanPointInPolygon(point, polygon);
+                // Ensure we have a polygon
+                if (zone.geometry.type !== 'Polygon') return false;
+                return turf.booleanPointInPolygon(point, zone);
             });
 
             if (isInside) {
@@ -70,8 +71,8 @@ const MapComponent = ({ sedes, onAnalysisUpdate, children, focusLocation }) => {
             } else {
                 // Simple 2km buffer check
                 const isNearby = currentZones.some(zone => {
-                    const polygon = turf.polygon(zone.geometry.coordinates);
-                    const buffered = turf.buffer(polygon, 2, { units: 'kilometers' });
+                    if (zone.geometry.type !== 'Polygon') return false;
+                    const buffered = turf.buffer(zone, 2, { units: 'kilometers' });
                     return turf.booleanPointInPolygon(point, buffered);
                 });
 

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet-draw/dist/leaflet.draw.css';
+import * as turf from '@turf/turf';
 
 // Fix for Leaflet Draw icons
 import 'leaflet-draw';
@@ -47,7 +48,15 @@ const MapDrawControl = ({ onCreated, onDeleted }) => {
             featureGroupRef.current.addLayer(layer);
 
             // Extract GeoJSON
-            const geoJson = layer.toGeoJSON();
+            let geoJson = layer.toGeoJSON();
+
+            // Special handling for Circles (Leaflet Draw returns Points for circles in toGeoJSON)
+            if (layer instanceof L.Circle) {
+                const center = layer.getLatLng();
+                const radius = layer.getRadius() / 1000; // Convert to kilometers for Turf
+                geoJson = turf.circle([center.lng, center.lat], radius, { units: 'kilometers', steps: 64 });
+            }
+
             if (onCreated) onCreated(geoJson, layer);
         });
 
