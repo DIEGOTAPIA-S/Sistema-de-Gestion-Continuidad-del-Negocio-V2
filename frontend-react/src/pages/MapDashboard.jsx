@@ -19,6 +19,7 @@ import InstructionsModal from '../components/InstructionsModal'; // Importar mod
 import EventRegistrationPanel from '../components/EventRegistrationPanel'; // Importar nuevo panel de eventos
 import InfrastructureLayer from '../components/InfrastructureLayer';
 import ColaboradoresLayer from '../components/ColaboradoresLayer'; // Importar capa de colaboradores
+import HeatmapLayer from '../components/HeatmapLayer'; // Nueva capa de calor
 import { fetchColaboradores } from '../services/colaboradoresService'; // Importar servicio
 import { downloadColaboradoresCSV } from '../utils/exportUtils'; // Importar utilidad de descarga
 import { booleanPointInPolygon, point } from '@turf/turf'; // Import Turf for analysis
@@ -63,6 +64,7 @@ const MapDashboard = () => {
 
     // Colaboradores State
     const [showColaboradores, setShowColaboradores] = useState(false);
+    const [showHeatmap, setShowHeatmap] = useState(false); // Nuevo estado para Mapa de Calor
     const [colaboradores, setColaboradores] = useState([]);
     const [searchTerm, setSearchTerm] = useState(''); // Estado para búsqueda
 
@@ -82,12 +84,12 @@ const MapDashboard = () => {
 
     // Load Colaboradores on toggle
     useEffect(() => {
-        if (showColaboradores && colaboradores.length === 0) {
+        if ((showColaboradores || showHeatmap) && colaboradores.length === 0) {
             fetchColaboradores()
                 .then(data => setColaboradores(data))
                 .catch(err => console.error("Error loading colaboradores:", err));
         }
-    }, [showColaboradores]);
+    }, [showColaboradores, showHeatmap]);
 
     useEffect(() => {
         if (earthquakeAlerts.length > 0) {
@@ -188,7 +190,7 @@ const MapDashboard = () => {
                         allowTaint: false,
                         logging: false,
                         backgroundColor: '#ffffff',
-                        scale: window.devicePixelRatio,
+                        scale: 2, // Use 2 for high density but keep positions relative
                         onclone: (clonedDoc) => {
                             // SANITIZATION: Remove modern CSS functions that html2canvas doesn't support
                             const styleTags = clonedDoc.getElementsByTagName('style');
@@ -197,9 +199,15 @@ const MapDashboard = () => {
                                 tag.innerHTML = tag.innerHTML.replace(/oklab\([^)]+\)/g, '#3b82f6');
                             }
                         },
-                        ignoreElements: (node) =>
-                            node.classList?.contains('leaflet-control-container') ||
-                            node.classList?.contains('leaflet-draw-toolbar')
+                        ignoreElements: (node) => {
+                            if (!node || !node.classList) return false;
+                            return (
+                                node.classList.contains('leaflet-control-container') ||
+                                node.classList.contains('leaflet-draw-toolbar') ||
+                                node.id === 'search-control' ||
+                                (node.getAttribute && node.getAttribute('style')?.includes('zIndex: 1000'))
+                            );
+                        }
                     });
 
                     if (canvas) {
@@ -215,27 +223,25 @@ const MapDashboard = () => {
 
             // Capture Charts
             let chartsImg = null;
-            if (showCharts) {
-                const chartsElement = document.getElementById('charts-capture');
-                if (chartsElement) {
-                    try {
-                        const canvas = await html2canvas(chartsElement, {
-                            useCORS: true,
-                            backgroundColor: '#ffffff',
-                            onclone: (clonedDoc) => {
-                                const styleTags = clonedDoc.getElementsByTagName('style');
-                                for (let tag of styleTags) {
-                                    tag.innerHTML = tag.innerHTML.replace(/oklch\([^)]+\)/g, '#ffffff');
-                                }
+            // Always try to capture charts from the hidden container to ensure they are in the report
+            const chartsElement = document.getElementById('charts-capture-hidden') || document.getElementById('charts-capture');
+            if (chartsElement) {
+                try {
+                    console.log("Capturando gráficas para el reporte...");
+                    const canvas = await html2canvas(chartsElement, {
+                        useCORS: true,
+                        backgroundColor: '#ffffff',
+                        logging: false,
+                        onclone: (clonedDoc) => {
+                            const styleTags = clonedDoc.getElementsByTagName('style');
+                            for (let tag of styleTags) {
+                                tag.innerHTML = tag.innerHTML.replace(/oklch\([^)]+\)/g, '#ffffff');
                             }
-                        });
-                        chartsImg = canvas.toDataURL('image/png');
-                    } catch (chartErr) {
-                        console.error("Error capturing Charts:", chartErr);
-                    }
-                }
-                else {
-                    alert("Advertencia: Gráficas activas pero no encontradas para captura.");
+                        }
+                    });
+                    chartsImg = canvas.toDataURL('image/png');
+                } catch (chartErr) {
+                    console.error("Error capturing Charts:", chartErr);
                 }
             }
 
@@ -428,6 +434,8 @@ const MapDashboard = () => {
                     showInfrastructure={showInfrastructure}
                     onToggleColaboradores={() => setShowColaboradores(!showColaboradores)}
                     showColaboradores={showColaboradores}
+                    onToggleHeatmap={() => setShowHeatmap(!showHeatmap)}
+                    showHeatmap={showHeatmap}
                     onSearchColaborador={setSearchTerm}
                     colaboradores={colaboradores} // Pass full list
                     sedes={sedes} // Pass full list
@@ -451,6 +459,7 @@ const MapDashboard = () => {
                             <WeatherLayer visible={showWeather} sedes={sedes} />
                             <InfrastructureLayer visible={showInfrastructure} onUpdate={setInfrastructurePoints} />
                             <ColaboradoresLayer visible={showColaboradores} colaboradores={colaboradores} />
+                            <HeatmapLayer visible={showHeatmap} points={colaboradores} />
                         </MapComponent>
 
                         {/* Waze Traffic Overlay */}
@@ -543,12 +552,19 @@ const MapDashboard = () => {
                     )}
 
                     {/* Charts & Details */}
-                    {showCharts && (
+                    {showCharts && sedesWithStatus && (
                         <div style={{ padding: '20px' }}>
                             <div id="charts-capture">
                                 <DashboardCharts sedes={sedesWithStatus} />
                             </div>
                             <AffectedListTable affectedSedes={affectedSedes} nearbySedes={nearbySedes} />
+                        </div>
+                    )}
+
+                    {/* Ghost Charts for PDF Capture (Always present for report) */}
+                    {sedesWithStatus && sedesWithStatus.length > 0 && (
+                        <div id="charts-capture-hidden" style={{ position: 'absolute', top: '-10000px', left: '-10000px', width: '1200px', zIndex: -1 }}>
+                            <DashboardCharts sedes={sedesWithStatus} />
                         </div>
                     )}
                 </div>

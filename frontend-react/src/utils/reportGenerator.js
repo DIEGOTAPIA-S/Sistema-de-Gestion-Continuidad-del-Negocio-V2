@@ -45,26 +45,28 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
             currentY += mapHeight + 10;
         }
 
-        // --- Stats Box ---
+        // --- Stats Table (Impact Summary) ---
         const affCount = Array.isArray(affectedSedes) ? affectedSedes.length : 0;
         const nearCount = Array.isArray(nearbySedes) ? nearbySedes.length : 0;
         const colabCount = Array.isArray(affectedColaboradores) ? affectedColaboradores.length : 0;
-
-        doc.setFillColor(248, 250, 252);
-        doc.setDrawColor(226, 232, 240);
-        doc.rect(14, currentY, pageWidth - 28, 25, 'FD'); // Increased height
-        doc.setTextColor(30);
-        doc.setFontSize(10);
-        doc.text(`Sedes Afectadas: ${affCount}`, 20, currentY + 10);
-        doc.text(`Sedes Cercanas: ${nearCount}`, 80, currentY + 10);
-        doc.text(`Colaboradores en Zona: ${colabCount}`, 20, currentY + 18);
-
-        // Breakdown by modality
         const presencial = affectedColaboradores.filter(c => c.modalidad !== 'Remoto').length;
         const remoto = affectedColaboradores.filter(c => c.modalidad === 'Remoto').length;
-        doc.text(`(Presencial: ${presencial}, Remoto: ${remoto})`, 80, currentY + 18);
 
-        currentY += 30;
+        autoTable(doc, {
+            startY: currentY,
+            head: [['Resumen de Impacto', 'Cantidad / Detalle']],
+            body: [
+                ['Sedes Afectadas (Zona Directa)', affCount],
+                ['Sedes Cercanas (Radio 2km)', nearCount],
+                ['Colaboradores en Zona de Riesgo', `${colabCount} (Presencial: ${presencial}, Remoto: ${remoto})`]
+            ],
+            theme: 'grid',
+            headStyles: { fillColor: [51, 65, 85], textColor: 255 }, // Slate-700
+            styles: { fontSize: 10, cellPadding: 3 },
+            columnStyles: { 0: { fontStyle: 'bold', width: 80 } }
+        });
+
+        currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY) + 15;
 
         // --- Human Talent Table (Optional) ---
         if (options.includeColaboradoresList && colabCount > 0) {
@@ -92,16 +94,12 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
                 styles: { fontSize: 8 },
                 didDrawPage: (data) => { currentY = data.cursor.y + 10; }
             });
-            currentY = doc.lastAutoTable.finalY + 10;
+            currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY) + 10;
         }
 
         // --- Charts Image ---
         if (chartsImg) {
-            // Check if we need a new page for charts
-            if (currentY + 80 > 280) {
-                doc.addPage();
-                currentY = 20;
-            }
+            if (currentY + 80 > 280) { doc.addPage(); currentY = 20; }
 
             doc.setFontSize(12);
             doc.setTextColor(15, 23, 42);
@@ -111,7 +109,7 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
             const chartHeight = 70;
             const chartWidth = pageWidth - 28;
             doc.addImage(chartsImg, 'PNG', 14, currentY, chartWidth, chartHeight);
-            currentY += chartHeight + 10;
+            currentY += chartHeight + 15;
         }
 
         // --- Common Table Logic ---
@@ -127,26 +125,25 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
 
             sedes.forEach(s => {
                 if (!s) return;
-
-                // Safe access to properties
                 const nombreSede = s.nombre || 'Sin nombre';
                 const ciudadSede = s.ciudad || '-';
+                const procesos = Array.isArray(s.procesos) && s.procesos.length > 0 ? s.procesos : [{ nombre: 'Sin procesos', criticidad: '-', rto: '-', rpo: '-' }];
 
-                if (Array.isArray(s.procesos) && s.procesos.length > 0) {
-                    s.procesos.forEach(p => {
-                        if (!p) return;
-                        tableBody.push([
-                            nombreSede,
-                            ciudadSede,
-                            p.nombre || 'Proceso genérico',
-                            p.criticidad || '-',
-                            p.rto ? `${p.rto}h` : '-',
-                            p.rpo ? `${p.rpo}h` : '-'
-                        ]);
-                    });
-                } else {
-                    tableBody.push([nombreSede, ciudadSede, 'Sin procesos', '-', '-', '-']);
-                }
+                procesos.forEach((p, idx) => {
+                    const row = [];
+                    // Apply RowSpan to Sede and Ciudad columns on first process
+                    if (idx === 0) {
+                        row.push({ content: nombreSede, rowSpan: procesos.length, styles: { fontStyle: 'bold', valign: 'middle' } });
+                        row.push({ content: ciudadSede, rowSpan: procesos.length, styles: { valign: 'middle' } });
+                    }
+
+                    row.push(p.nombre || 'Proceso genérico');
+                    row.push(p.criticality || p.criticidad || '-');
+                    row.push(p.rto ? `${p.rto}h` : '-');
+                    row.push(p.mtpd || p.rpo || '-');
+
+                    tableBody.push(row);
+                });
             });
 
             if (tableBody.length === 0) return;
@@ -168,7 +165,7 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
                 }
             });
 
-            currentY = doc.lastAutoTable.finalY + 15;
+            currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY) + 15;
 
             if (currentY > 260) {
                 doc.addPage();
@@ -180,7 +177,7 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
         renderTable('Sedes Afectadas (Zona Directa)', affectedSedes, [220, 38, 38]); // Red
         renderTable('Sedes Cercanas (< 2km)', nearbySedes, [234, 88, 12]); // Orange
 
-        // --- Infrastructure Table (Grouped by Sede) ---
+        // --- Red de Apoyo Table (Grouped by Sede) ---
         const reportInfrastructure = infrastructurePoints;
 
         if (reportInfrastructure && reportInfrastructure.length > 0) {
@@ -211,7 +208,7 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
 
                     doc.setFontSize(11);
                     doc.setTextColor(30, 64, 175); // Blue-800
-                    doc.text(`Infraestructura mas cercana a: ${sede.nombre}`, 14, currentY);
+                    doc.text(`Red de apoyo cercana a: ${sede.nombre}`, 14, currentY);
                     currentY += 5;
 
                     // Calculate distances from THIS sede to all points
@@ -247,13 +244,13 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
                         }
                     });
 
-                    currentY = doc.lastAutoTable.finalY + 10;
+                    currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY) + 10;
                 });
             } else {
                 // Fallback if no specific sede context
                 doc.setFontSize(11);
                 doc.setTextColor(15, 23, 42);
-                doc.text("Infraestructura Visible en el Mapa", 14, currentY);
+                doc.text("Red de Apoyo Visible en el Mapa", 14, currentY);
                 currentY += 5;
 
                 const infraBody = reportInfrastructure.slice(0, 10).map(p => [
@@ -277,6 +274,33 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
                 });
             }
         }
+
+        // --- Emergency Directory (Fixed Numbers) ---
+        if (currentY > 220) { doc.addPage(); currentY = 20; }
+
+        doc.setFontSize(12);
+        doc.setTextColor(15, 23, 42);
+        doc.text("Directorio de Emergencias (Nacional / Bogotá)", 14, currentY);
+        currentY += 5;
+
+        const emergencyData = [
+            ['Emergencias Generales', '123', 'Atención inmediata 24/7'],
+            ['Cruz Roja', '132', 'Atención prehospitalaria'],
+            ['Defensa Civil', '144', 'Gestión del riesgo'],
+            ['Bomberos', '119', 'Incendios y rescate'],
+            ['Policía Nacional', '112', 'Seguridad ciudadana'],
+            ['Línea de Salud (Bogotá)', '195', 'Información trámites y citas'],
+            ['Gaula (Secuestro/Extorsión)', '165', 'Seguridad especializada']
+        ];
+
+        autoTable(doc, {
+            startY: currentY,
+            head: [['Servicio', 'Contacto (Marcación)', 'Descripción']],
+            body: emergencyData,
+            theme: 'grid',
+            headStyles: { fillColor: [30, 41, 59], textColor: 255 },
+            styles: { fontSize: 8, cellPadding: 2 }
+        });
 
         doc.save(`Reporte_Continuidad_${new Date().getTime()}.pdf`);
 

@@ -16,19 +16,20 @@ const EarthquakeLayer = ({ visible, onAlertsUpdate }) => {
             setLoading(true);
             try {
                 const response = await axios.get(USGS_API_URL);
-                // Filtro Estricto: Solo Colombia y sus fronteras directas
-                const nameMatch = q.properties.place && q.properties.place.toLowerCase().includes('colombia');
+                if (!response.data || !response.data.features) return;
 
-                // Box 1: Colombia Continental (Aprox)
-                // Lat: -4.5 a 13.5 | Lon: -79.5 (Chocó/Nariño) a -66 (Orinoquía)
-                // Evita Panamá Central/Oeste, Ecuador profundo, Venezuela profunda
-                const inMainland = (lat >= -4.5 && lat <= 13.5) && (lon >= -79.5 && lon <= -66.5);
+                const colQuakes = response.data.features.filter(q => {
+                    const [lon, lat] = q.geometry.coordinates;
+                    const nameMatch = q.properties.place && q.properties.place.toLowerCase().includes('colombia');
 
-                // Box 2: San Andrés y Providencia (Mar Caribe)
-                // Lat: 11.5 a 14.0 | Lon: -82.0 a -81.0
-                const inIslands = (lat >= 11.5 && lat <= 14.0) && (lon >= -82.0 && lon <= -81.0);
+                    // Box 1: Colombia Continental (Aprox)
+                    const inMainland = (lat >= -4.5 && lat <= 13.5) && (lon >= -79.5 && lon <= -66.5);
 
-                return nameMatch || inMainland || inIslands;
+                    // Box 2: San Andrés y Providencia (Mar Caribe)
+                    const inIslands = (lat >= 11.5 && lat <= 14.0) && (lon >= -82.0 && lon <= -81.0);
+
+                    return nameMatch || inMainland || inIslands;
+                });
 
                 setEarthquakes(colQuakes);
 
@@ -39,7 +40,7 @@ const EarthquakeLayer = ({ visible, onAlertsUpdate }) => {
                         place: f.properties.place,
                         time: f.properties.time,
                         url: f.properties.url,
-                        coordinates: f.geometry.coordinates // Pass coords for distance calc if needed
+                        coordinates: f.geometry.coordinates
                     }));
                     onAlertsUpdate(alerts);
                 }

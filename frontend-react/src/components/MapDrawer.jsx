@@ -31,6 +31,7 @@ const MapDrawer = ({
     showTraffic, onToggleTraffic,
     showInfrastructure, onToggleInfrastructure,
     showColaboradores, onToggleColaboradores,
+    showHeatmap, onToggleHeatmap,
     showEarthquakes, onToggleEarthquakes,
     showNews, onToggleNews,
     onShowHelp
@@ -217,6 +218,10 @@ const MapDrawer = ({
                             <button onClick={onToggleColaboradores} className={`btn-layer ${showColaboradores ? 'active-teal' : ''}`}>
                                 <span style={{ fontSize: '1.5rem' }}>👥</span>
                                 <span>{showColaboradores ? 'Ocultar' : 'Personal'}</span>
+                            </button>
+                            <button onClick={onToggleHeatmap} className={`btn-layer ${showHeatmap ? 'active-orange' : ''}`}>
+                                <span style={{ fontSize: '1.5rem' }}>🔥</span>
+                                <span>{showHeatmap ? 'Ocultar' : 'Mapa Calor'}</span>
                             </button>
                             <button onClick={onToggleWeather} className={`btn-layer ${showWeather ? 'active-blue' : ''}`}>
                                 <span style={{ fontSize: '1.5rem' }}>☁️</span>

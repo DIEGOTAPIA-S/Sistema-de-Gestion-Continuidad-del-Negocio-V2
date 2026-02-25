@@ -20,6 +20,10 @@ export const fetchInfrastructureByBBox = async (south, west, north, east) => {
           way["amenity"="fire_station"](${bbox});
           node["amenity"="hospital"](${bbox});
           way["amenity"="hospital"](${bbox});
+          node["amenity"="clinic"](${bbox});
+          way["amenity"="clinic"](${bbox});
+          node["amenity"="doctors"](${bbox});
+          way["amenity"="doctors"](${bbox});
         );
         out center;
     `;
@@ -29,14 +33,29 @@ export const fetchInfrastructureByBBox = async (south, west, north, east) => {
             headers: { 'Content-Type': 'text/plain' }
         });
 
-        return response.data.elements.map(el => ({
-            id: el.id,
-            lat: el.lat || el.center.lat,
-            lon: el.lon || el.center.lon,
-            type: el.tags.amenity,
-            name: el.tags.name || formatName(el.tags.amenity),
-            phone: el.tags.phone || el.tags['contact:phone'] || 'No registrado'
-        }));
+        return response.data.elements.map(el => {
+            const tags = el.tags || {};
+
+            // Priorizamos teléfono, luego contact:phone, luego celular o web si no hay nada
+            let contact = tags.phone || tags['contact:phone'] || tags.mobile || tags['contact:mobile'];
+
+            if (!contact && tags.website) {
+                contact = "Sitio Web: " + tags.website;
+            } else if (!contact && tags.email) {
+                contact = tags.email;
+            } else if (!contact) {
+                contact = "No registrado";
+            }
+
+            return {
+                id: el.id,
+                lat: el.lat || el.center.lat,
+                lon: el.lon || el.center.lon,
+                type: tags.amenity,
+                name: tags.name || (tags.operator ? `${formatName(tags.amenity)} (${tags.operator})` : formatName(tags.amenity)),
+                phone: contact // Mantenemos el nombre de la propiedad 'phone' para compatibilidad con el reporte
+            };
+        });
     } catch (error) {
         console.error("Error fetching infrastructure:", error);
         return [];

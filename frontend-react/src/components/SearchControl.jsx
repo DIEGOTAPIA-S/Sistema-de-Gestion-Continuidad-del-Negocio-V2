@@ -50,7 +50,7 @@ const SearchControl = () => {
     };
 
     return (
-        <div style={{
+        <div id="search-control" style={{
             position: 'absolute',
             top: '10px',
             right: '50px', // Positioned to the left of the Zoom/Draw controls (approx 50px+)
