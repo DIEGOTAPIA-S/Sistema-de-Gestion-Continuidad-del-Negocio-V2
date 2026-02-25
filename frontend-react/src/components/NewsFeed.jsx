@@ -4,13 +4,15 @@ import api from '../services/api';
 const NewsFeed = ({ isOpen, onClose }) => {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState('movilidad');
+    const [activeTab, setActiveTab] = useState('emergencia');
     const [isExpanded, setIsExpanded] = useState(false);
 
     const topics = {
-        movilidad: { label: '🚦 Movilidad', query: 'Bogotá Movilidad' },
-        orden: { label: '🛡️ Orden Público', query: 'Colombia Paro' },
-        clima: { label: '⛈️ Clima', query: 'Colombia Alertas Ideam' }
+        emergencia: { label: '🚨 Emergencia', query: 'Bogotá (emergencia OR evacuación OR explosión OR "fuga de gas" OR incendio OR colapso)' },
+        crisis: { label: '🛡️ Crisis/Seguridad', query: 'Colombia (atentado OR terrorista OR "amenaza bomba" OR disturbios OR orden público)' },
+        desastres: { label: '⛈️ Naturaleza', query: 'Colombia (sismo OR terremoto OR inundación OR derrumbe OR vendaval OR huracán)' },
+        continuidad: { label: '🦾 Continuidad/IT', query: 'Colombia (ciberataque OR hackeo OR "falla eléctrica" OR "corte agua" OR huelga)' },
+        movilidad: { label: '🚦 Movilidad', query: 'Bogotá (movilidad OR "cierre via" OR accidente OR transmilenio OR bloqueo)' }
     };
 
     useEffect(() => {
