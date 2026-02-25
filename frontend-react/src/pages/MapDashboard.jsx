@@ -59,6 +59,7 @@ const MapDashboard = () => {
     const [showInfrastructure, setShowInfrastructure] = useState(false); // Infrastructure State
     const [infrastructurePoints, setInfrastructurePoints] = useState([]); // Infrastructure Data
     const [earthquakeAlerts, setEarthquakeAlerts] = useState([]);
+    const [newsAlerts, setNewsAlerts] = useState([]); // Nueva lista para alertas de noticias
     const [emergencyAlert, setEmergencyAlert] = useState(null); // State for the popup
     const [focusLocation, setFocusLocation] = useState(null); // State for map FlyTo
 
@@ -416,7 +417,7 @@ const MapDashboard = () => {
                     showCharts={showCharts}
                     onToggleEarthquakes={() => setShowEarthquakes(!showEarthquakes)}
                     showEarthquakes={showEarthquakes}
-                    earthquakeAlerts={earthquakeAlerts}
+                    earthquakeAlerts={[...earthquakeAlerts, ...newsAlerts]}
                     onSimulateAlert={() => {
                         const mocks = [
                             { mag: 5.8, place: "Simulacro: 10km al Norte de Bogotá", coords: [4.81, -74.07] },
@@ -467,6 +468,13 @@ const MapDashboard = () => {
                                 if (!emergencyAlert) {
                                     setEmergencyAlert(crisis);
                                     setShowEarthquakes(true);
+
+                                    // Agregar a la lista de alertas activas para coherencia UI
+                                    setNewsAlerts(prev => {
+                                        const exists = prev.some(a => a.link === crisis.link);
+                                        if (exists) return prev;
+                                        return [...prev, crisis];
+                                    });
 
                                     // Crear evento automático si es un sismo detectado
                                     const autoEvent = {

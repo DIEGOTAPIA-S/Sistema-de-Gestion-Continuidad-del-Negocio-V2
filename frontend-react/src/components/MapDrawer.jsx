@@ -263,62 +263,38 @@ const MapDrawer = ({
                                                         </span>
                                                     </div>
                                                     <div style={{ fontSize: '0.85rem', color: '#1e293b', margin: '4px 0' }}>{quake.place}</div>
+                                                    {quake.source && (
+                                                        <div style={{ fontSize: '0.7rem', color: '#2563eb', fontWeight: '500' }}>
+                                                            📰 Fuente: {quake.source}
+                                                        </div>
+                                                    )}
                                                     <button
                                                         onClick={() => {
-                                                            // Determine coordinates (Simulated vs Real)
-                                                            let coords = quake.coordinates;
-                                                            if (!coords && quake.place.includes("Simulacro")) {
-                                                                // Fallback for simulation mocks if coords missing in object
-                                                                if (quake.place.includes("Bogotá")) coords = [4.81, -74.07];
-                                                                else if (quake.place.includes("Pasto")) coords = [1.22, -77.37];
-                                                                else if (quake.place.includes("Santander")) coords = [6.79, -73.12];
-                                                                else coords = [4.71, -74.07];
-                                                            } else if (coords && coords.length === 3) {
-                                                                // GeoJSON is [Lon, Lat], Leaflet needs [Lat, Lon]
-                                                                // Wait, earthquakeAlerts from component usually come processed or raw?
-                                                                // If from USGS GeoJSON: coordinates are [Lon, Lat, Depth]
-                                                                // If from Simulation: might be [Lat, Lon]
-                                                                // Let's assume [Lon, Lat] based on standard GeoJSON, but check simulation logic
-                                                                // In main dashboard simulation: coords: [4.81, -74.07] (Lat, Lon)
-                                                                // In EarthquakeLayer.jsx: features.geometry.coordinates is [Lon, Lat]
-                                                                // We need to standardize.
-                                                                // Safe bet: if abs(coords[0]) > abs(coords[1]) -> [Lon, Lat] (Colombia is Lat ~4, Lon ~-74)
-                                                                // No, Lon is -74, Lat is 4. Abs(Lon) > Abs(Lat).
-
-                                                                // Checking if it's already Lat,Lon or Lon,Lat is tricky without context.
-                                                                // But typically `onLocate` expects { latitud, longitud } item or focusLocation expects [Lat, Lon]
-
-                                                                // Let's try to construct a 'target' object compatible with onLocate
+                                                            if (!quake.coordinates && !quake.place.includes("Simulacro")) {
+                                                                alert("Esta alerta proviene de noticias y no tiene coordenadas exactas aún.");
+                                                                return;
                                                             }
-
-                                                            // Simplest interaction: Call onLocate with formatted item
-                                                            // The Dashboard handleLocate expects: { latitud, longitud }
-
+                                                            // ... existing logic
                                                             let lat, lon;
-                                                            // Check if simulated (Lat, Lon)
                                                             if (Array.isArray(quake.coordinates)) {
                                                                 if (quake.coordinates[1] < -20) {
-                                                                    // Most likely [Lat, Lon] where Lon is ~-70
                                                                     lat = quake.coordinates[0];
                                                                     lon = quake.coordinates[1];
                                                                 } else {
-                                                                    // Most likely [Lon, Lat] (GeoJSON)
                                                                     lat = quake.coordinates[1];
                                                                     lon = quake.coordinates[0];
                                                                 }
                                                             } else {
-                                                                // Fallback for mocks
                                                                 lat = 4.71; lon = -74.07;
                                                             }
-
                                                             onLocate({ latitud: lat, longitud: lon });
                                                         }}
                                                         style={{
                                                             width: '100%',
                                                             padding: '4px',
-                                                            background: '#fee2e2',
-                                                            color: '#b91c1c',
-                                                            border: '1px solid #fecaca',
+                                                            background: quake.coordinates ? '#fee2e2' : '#f1f5f9',
+                                                            color: quake.coordinates ? '#b91c1c' : '#64748b',
+                                                            border: `1px solid ${quake.coordinates ? '#fecaca' : '#e2e8f0'}`,
                                                             borderRadius: '4px',
                                                             cursor: 'pointer',
                                                             fontSize: '0.8rem',
@@ -328,7 +304,7 @@ const MapDrawer = ({
                                                             gap: '5px'
                                                         }}
                                                     >
-                                                        📍 Ver en Mapa
+                                                        {quake.coordinates ? '📍 Ver en Mapa' : '🔍 Sin Coordenadas'}
                                                     </button>
                                                 </div>
                                             ))}
