@@ -10,11 +10,13 @@ const NewsFeed = ({ isOpen, onClose, onCrisisDetected }) => {
 
     const topics = {
         emergencia: { label: '🚨 Emergencia', query: 'Bogotá (emergencia OR evacuación OR explosión OR "fuga de gas" OR incendio OR colapso)' },
-        crisis: { label: '🛡️ Crisis/Seguridad', query: 'Colombia (atentado OR terrorista OR "amenaza bomba" OR disturbios OR orden público)' },
-        desastres: { label: '⛈️ Naturaleza', query: 'Colombia (sismo OR terremoto OR inundación OR derrumbe OR vendaval OR huracán)' },
-        continuidad: { label: '🦾 Continuidad/IT', query: 'Colombia (ciberataque OR hackeo OR "falla eléctrica" OR "corte agua" OR huelga)' },
+        crisis: { label: '🤝 Factores Sociales', query: 'Colombia (protesta OR paro OR vandalismo OR violencia OR huelga OR disturbios OR "orden público" OR atentado OR "conflicto social")' },
+        desastres: { label: '🌍 Factores Físicos/Ambientales', query: 'Colombia (sismo OR terremoto OR inundación OR derrumbe OR deslizamiento OR vendaval OR erupción OR sequía OR "ola de calor")' },
+        servicios: { label: '🔌 Servicios Públicos', query: 'Colombia ("corte de agua" OR apagón OR "corte de luz" OR racionamiento OR "falla eléctrica" OR acueducto OR alcantarillado OR "gas domiciliario" OR "servicios públicos" OR EPM OR Codensa OR "Gas Natural Fenosa" OR "Gases del Caribe" OR "Aguas de Bogotá" OR EAAB OR Emcali OR "interrupción del servicio")' },
+        continuidad: { label: '💻 Noticias IT', query: 'Colombia (ciberataque OR hackeo OR ransomware OR "falla de sistema" OR "caída de red" OR "brecha de seguridad" OR "ataque informático" OR phishing OR malware OR "interrupción tecnológica")' },
         movilidad: { label: '🚦 Movilidad', query: 'Bogotá (movilidad OR "cierre via" OR accidente OR transmilenio OR bloqueo)' }
     };
+
 
     useEffect(() => {
         if (isOpen) {
