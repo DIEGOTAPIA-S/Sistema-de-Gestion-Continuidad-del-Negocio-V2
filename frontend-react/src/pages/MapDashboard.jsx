@@ -93,12 +93,25 @@ const MapDashboard = () => {
 
     useEffect(() => {
         if (earthquakeAlerts.length > 0) {
-            // Check for ANY events (Mag > 2.0) in the last hour
+            // Check for ANY events (Mag >= 2.0) in the last hour
             // Lowered threshold as requested by user
             const critical = earthquakeAlerts.find(a => a.mag >= 2.0 && (Date.now() - a.time) < 3600000);
-            if (critical) {
+            if (critical && !emergencyAlert) {
                 setEmergencyAlert(critical);
                 setShowEarthquakes(true); // Auto-show layer
+
+                // Auto-save to DB for History Persistence
+                const autoEvent = {
+                    tipo: 'Desastre Natural',
+                    descripcion: `[GEOLÓGICO] Sismo M${critical.mag} en ${critical.place}.`,
+                    nivel_alerta: critical.mag > 5 ? 'rojo' : 'amarillo',
+                    geometria: JSON.stringify([{
+                        type: 'Feature',
+                        geometry: { type: 'Point', coordinates: critical.coordinates }
+                    }]),
+                    sedes_afectadas_ids: [] // Se puede mejorar buscando sedes cercanas
+                };
+                createEvento(autoEvent).catch(e => console.error("Error auto-saving seismic event:", e));
             }
         }
     }, [earthquakeAlerts]);
@@ -445,7 +458,29 @@ const MapDashboard = () => {
                 {/* Right Content Area (Scrollable) */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', position: 'relative' }}>
                     {/* News Feed Overlay (Fixed: Pass isOpen prop) */}
-                    {showNews && <NewsFeed isOpen={true} onClose={() => setShowNews(false)} />}
+                    {showNews && (
+                        <NewsFeed
+                            isOpen={true}
+                            onClose={() => setShowNews(false)}
+                            onCrisisDetected={(crisis) => {
+                                // Evitar duplicados si ya hay una alerta de emergencia mostrada
+                                if (!emergencyAlert) {
+                                    setEmergencyAlert(crisis);
+                                    setShowEarthquakes(true);
+
+                                    // Crear evento automático si es un sismo detectado
+                                    const autoEvent = {
+                                        tipo: 'Desastre Natural',
+                                        descripcion: `[AUTO-ALERTA] ${crisis.type}: ${crisis.place}. Fuente: ${crisis.source}.`,
+                                        nivel_alerta: 'amarillo',
+                                        geometria: JSON.stringify([]), // No tenemos geometría exacta de noticias
+                                        sedes_afectadas_ids: []
+                                    };
+                                    createEvento(autoEvent).catch(e => console.error("Error saving auto-event:", e));
+                                }
+                            }}
+                        />
+                    )}
 
                     {/* Map Container (65% Height / Min 500px) */}
                     <div id="map-capture" style={{ height: '65vh', minHeight: '500px', flexShrink: 0, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', position: 'relative' }}>

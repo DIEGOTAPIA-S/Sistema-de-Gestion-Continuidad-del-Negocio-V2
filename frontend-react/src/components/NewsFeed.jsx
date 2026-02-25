@@ -1,11 +1,35 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 
-const NewsFeed = ({ isOpen, onClose }) => {
+const NewsFeed = ({ isOpen, onClose, onCrisisDetected }) => {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('emergencia');
     const [isExpanded, setIsExpanded] = useState(false);
+
+    // Lógica de "Sensor Sintético": Detectar sismos en las noticias
+    const [lastNotifiedId, setLastNotifiedId] = useState(null);
+
+    useEffect(() => {
+        if (news.length > 0 && activeTab === 'desastres') {
+            const seismicNews = news.find(item => {
+                const title = item.title.toLowerCase();
+                return title.includes('sismo') || title.includes('temblor') || title.includes('terremoto');
+            });
+
+            if (seismicNews && onCrisisDetected && seismicNews.link !== lastNotifiedId) {
+                setLastNotifiedId(seismicNews.link);
+                onCrisisDetected({
+                    type: 'Sismo (Detectado vía Noticias)',
+                    mag: 'Pendiente', // No siempre viene en el título
+                    place: seismicNews.title.split('|')[0].trim(),
+                    time: Date.now(),
+                    source: seismicNews.source,
+                    link: seismicNews.link
+                });
+            }
+        }
+    }, [news, activeTab, onCrisisDetected, lastNotifiedId]);
 
     const topics = {
         emergencia: { label: '🚨 Emergencia', query: 'Bogotá (emergencia OR evacuación OR explosión OR "fuga de gas" OR incendio OR colapso)' },

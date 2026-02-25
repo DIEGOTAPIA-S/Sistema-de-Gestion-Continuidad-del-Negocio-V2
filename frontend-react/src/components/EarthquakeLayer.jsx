@@ -6,9 +6,9 @@ const EarthquakeLayer = ({ visible, onAlertsUpdate }) => {
     const [earthquakes, setEarthquakes] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // URL del USGS: Sismos de magnitud 2.5+ en el último día
-    // Usamos esta porque es pública, gratis y muy confiable.
-    const USGS_API_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson";
+    // URL del USGS: Sismos de TODAS las magnitudes en el último día
+    // Cambiado de 2.5_day a all_day para no perder eventos locales menores.
+    const USGS_API_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson";
 
     useEffect(() => {
         // Removed (!visible) check to allow background monitoring
