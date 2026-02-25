@@ -82,12 +82,13 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
                 c.cargo || '',
                 c.area || '',
                 c.sede_nombre || 'N/A',
+                c.ciudad || '-',
                 c.email || 'No registrado'
             ]);
 
             autoTable(doc, {
                 startY: currentY,
-                head: [['Nombre', 'Cargo', 'Area', 'Sede', 'Email']],
+                head: [['Nombre', 'Cargo', 'Area', 'Sede', 'Ciudad', 'Email']],
                 body: colabBody,
                 theme: 'striped',
                 headStyles: { fillColor: [59, 130, 246], textColor: 255 }, // Blue

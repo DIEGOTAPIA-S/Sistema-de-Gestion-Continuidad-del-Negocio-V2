@@ -36,11 +36,12 @@ class EventoSerializer(serializers.ModelSerializer):
 
 class ColaboradorSerializer(serializers.ModelSerializer):
     sede_nombre = serializers.ReadOnlyField(source='sede_asignada.nombre')
+    ciudad = serializers.ReadOnlyField(source='sede_asignada.ciudad')
 
     class Meta:
         model = Colaborador
         fields = ['id', 'nombres', 'apellidos', 'identificacion', 'cargo', 'area', 'gerencia', 
-                  'modalidad', 'direccion', 'telefono', 'email', 'compania', 'latitud', 'longitud', 'sede_asignada', 'sede_nombre']
+                  'modalidad', 'direccion', 'telefono', 'email', 'compania', 'latitud', 'longitud', 'sede_asignada', 'sede_nombre', 'ciudad']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
