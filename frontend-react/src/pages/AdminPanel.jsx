@@ -147,7 +147,12 @@ const AdminPanel = () => {
         }
         try {
             const searchStr = `${sedeForm.direccion}, ${sedeForm.ciudad || 'Colombia'}`;
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchStr)}&limit=1`);
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchStr)}&limit=1&viewbox=-79,12,-66,-4&bounded=0`;
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'SGC-App-Continuidad-V2/1.0 (santiago.castaneda@example.com)'
+                }
+            });
             const data = await response.json();
             if (data && data.length > 0) {
                 const { lat, lon } = data[0];

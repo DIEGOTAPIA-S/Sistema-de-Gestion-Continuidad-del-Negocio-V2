@@ -16,12 +16,20 @@ const SearchControl = () => {
 
         setLoading(true);
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+            // Added viewbox to prioritize Colombia and User-Agent as per Nominatim policy
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&viewbox=-79,12,-66,-4&bounded=0&addressdetails=1`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'SGC-App-Continuidad-V2/1.0 (santiago.castaneda@example.com)'
+                }
+            });
+
             const data = await response.json();
 
             if (data && data.length > 0) {
-                const { lat, lon } = data[0];
-                const latLng = [lat, lon];
+                const { lat, lon, display_name } = data[0];
+                const latLng = [parseFloat(lat), parseFloat(lon)];
 
                 // Fly to location
                 map.flyTo(latLng, 14);
@@ -32,18 +40,17 @@ const SearchControl = () => {
                 }
 
                 // Add new generic blue marker
-                // Default Leaflet marker is blue
                 const newMarker = L.marker(latLng).addTo(map);
-                newMarker.bindPopup(`<b>${query}</b><br/>Ubicación encontrada`).openPopup();
+                newMarker.bindPopup(`<b>${query}</b><br/>${display_name}`).openPopup();
 
                 searchMarkerRef.current = newMarker;
 
             } else {
-                alert('No hay resultados para esta búsqueda.');
+                alert('No hay resultados para esta búsqueda o la ubicación es muy específica.');
             }
         } catch (error) {
             console.error("Error buscando dirección:", error);
-            alert("Error al buscar.");
+            alert("Error al conectar con el servicio de mapas.");
         } finally {
             setLoading(false);
         }

@@ -14,7 +14,13 @@ const AdminSearchControl = ({ onLocationFound }) => {
         console.log("Buscando:", query);
 
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+            // Added viewbox to prioritize Colombia and User-Agent as per Nominatim policy
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&viewbox=-79,12,-66,-4&bounded=0`;
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'SGC-App-Continuidad-V2/1.0 (santiago.castaneda@example.com)'
+                }
+            });
             const data = await response.json();
 
             if (data && data.length > 0) {

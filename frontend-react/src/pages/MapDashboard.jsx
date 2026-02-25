@@ -8,7 +8,7 @@ import FilterControl from '../components/FilterControl';
 import SedeListModal from '../components/SedeListModal';
 import AffectedListTable from '../components/AffectedListTable'; // New Component
 import { getSedes } from '../services/sedeService';
-import { createEvento } from '../services/eventoService';
+import { createEvento, getEventos } from '../services/eventoService';
 import { generatePDFReport } from '../utils/reportGenerator';
 import html2canvas from 'html2canvas';
 import { fetchInfrastructureNearPoint } from '../services/infrastructureService'; // New Service
@@ -59,7 +59,6 @@ const MapDashboard = () => {
     const [showInfrastructure, setShowInfrastructure] = useState(false); // Infrastructure State
     const [infrastructurePoints, setInfrastructurePoints] = useState([]); // Infrastructure Data
     const [earthquakeAlerts, setEarthquakeAlerts] = useState([]);
-    const [newsAlerts, setNewsAlerts] = useState([]); // Nueva lista para alertas de noticias
     const [emergencyAlert, setEmergencyAlert] = useState(null); // State for the popup
     const [focusLocation, setFocusLocation] = useState(null); // State for map FlyTo
 
@@ -83,13 +82,15 @@ const MapDashboard = () => {
         );
     });
 
-    // Load Colaboradores on toggle
+    // Load Colaboradores and History on start
     useEffect(() => {
         if ((showColaboradores || showHeatmap) && colaboradores.length === 0) {
             fetchColaboradores()
                 .then(data => setColaboradores(data))
                 .catch(err => console.error("Error loading colaboradores:", err));
         }
+
+        // Fetch recent seismic events from local DB for persistence
     }, [showColaboradores, showHeatmap]);
 
     useEffect(() => {
@@ -100,19 +101,6 @@ const MapDashboard = () => {
             if (critical && !emergencyAlert) {
                 setEmergencyAlert(critical);
                 setShowEarthquakes(true); // Auto-show layer
-
-                // Auto-save to DB for History Persistence
-                const autoEvent = {
-                    tipo: 'Desastre Natural',
-                    descripcion: `[GEOLÓGICO] Sismo M${critical.mag} en ${critical.place}.`,
-                    nivel_alerta: critical.mag > 5 ? 'rojo' : 'amarillo',
-                    geometria: JSON.stringify([{
-                        type: 'Feature',
-                        geometry: { type: 'Point', coordinates: critical.coordinates }
-                    }]),
-                    sedes_afectadas_ids: [] // Se puede mejorar buscando sedes cercanas
-                };
-                createEvento(autoEvent).catch(e => console.error("Error auto-saving seismic event:", e));
             }
         }
     }, [earthquakeAlerts]);
@@ -417,7 +405,7 @@ const MapDashboard = () => {
                     showCharts={showCharts}
                     onToggleEarthquakes={() => setShowEarthquakes(!showEarthquakes)}
                     showEarthquakes={showEarthquakes}
-                    earthquakeAlerts={[...earthquakeAlerts, ...newsAlerts]}
+                    earthquakeAlerts={earthquakeAlerts}
                     onSimulateAlert={() => {
                         const mocks = [
                             { mag: 5.8, place: "Simulacro: 10km al Norte de Bogotá", coords: [4.81, -74.07] },
@@ -463,30 +451,6 @@ const MapDashboard = () => {
                         <NewsFeed
                             isOpen={true}
                             onClose={() => setShowNews(false)}
-                            onCrisisDetected={(crisis) => {
-                                // Evitar duplicados si ya hay una alerta de emergencia mostrada
-                                if (!emergencyAlert) {
-                                    setEmergencyAlert(crisis);
-                                    setShowEarthquakes(true);
-
-                                    // Agregar a la lista de alertas activas para coherencia UI
-                                    setNewsAlerts(prev => {
-                                        const exists = prev.some(a => a.link === crisis.link);
-                                        if (exists) return prev;
-                                        return [...prev, crisis];
-                                    });
-
-                                    // Crear evento automático si es un sismo detectado
-                                    const autoEvent = {
-                                        tipo: 'Desastre Natural',
-                                        descripcion: `[AUTO-ALERTA] ${crisis.type}: ${crisis.place}. Fuente: ${crisis.source}.`,
-                                        nivel_alerta: 'amarillo',
-                                        geometria: JSON.stringify([]), // No tenemos geometría exacta de noticias
-                                        sedes_afectadas_ids: []
-                                    };
-                                    createEvento(autoEvent).catch(e => console.error("Error saving auto-event:", e));
-                                }
-                            }}
                         />
                     )}
 

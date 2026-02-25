@@ -263,20 +263,11 @@ const MapDrawer = ({
                                                         </span>
                                                     </div>
                                                     <div style={{ fontSize: '0.85rem', color: '#1e293b', margin: '4px 0' }}>{quake.place}</div>
-                                                    {quake.source && (
-                                                        <div style={{ fontSize: '0.7rem', color: '#2563eb', fontWeight: '500' }}>
-                                                            📰 Fuente: {quake.source}
-                                                        </div>
-                                                    )}
                                                     <button
                                                         onClick={() => {
-                                                            if (!quake.coordinates && !quake.place.includes("Simulacro")) {
-                                                                alert("Esta alerta proviene de noticias y no tiene coordenadas exactas aún.");
-                                                                return;
-                                                            }
-                                                            // ... existing logic
                                                             let lat, lon;
                                                             if (Array.isArray(quake.coordinates)) {
+                                                                // Handle [Lon, Lat] or [Lat, Lon]
                                                                 if (quake.coordinates[1] < -20) {
                                                                     lat = quake.coordinates[0];
                                                                     lon = quake.coordinates[1];
@@ -292,9 +283,9 @@ const MapDrawer = ({
                                                         style={{
                                                             width: '100%',
                                                             padding: '4px',
-                                                            background: quake.coordinates ? '#fee2e2' : '#f1f5f9',
-                                                            color: quake.coordinates ? '#b91c1c' : '#64748b',
-                                                            border: `1px solid ${quake.coordinates ? '#fecaca' : '#e2e8f0'}`,
+                                                            background: '#fee2e2',
+                                                            color: '#b91c1c',
+                                                            border: '1px solid #fecaca',
                                                             borderRadius: '4px',
                                                             cursor: 'pointer',
                                                             fontSize: '0.8rem',
@@ -304,7 +295,7 @@ const MapDrawer = ({
                                                             gap: '5px'
                                                         }}
                                                     >
-                                                        {quake.coordinates ? '📍 Ver en Mapa' : '🔍 Sin Coordenadas'}
+                                                        📍 Ver en Mapa
                                                     </button>
                                                 </div>
                                             ))}
