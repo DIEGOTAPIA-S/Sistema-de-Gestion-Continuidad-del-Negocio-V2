@@ -19,11 +19,11 @@ const SearchControl = () => {
             // Added viewbox to prioritize Colombia and User-Agent as per Nominatim policy
             const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&viewbox=-79,12,-66,-4&bounded=0&addressdetails=1`;
 
-            const response = await fetch(url, {
-                headers: {
-                    'User-Agent': 'SGC-App-Continuidad-V2/1.0 (santiago.castaneda@example.com)'
-                }
-            });
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Error del servidor de mapas: ${response.status}`);
+            }
 
             const data = await response.json();
 

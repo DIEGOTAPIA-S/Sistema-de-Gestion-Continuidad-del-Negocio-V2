@@ -68,6 +68,204 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
 
         currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY) + 15;
 
+        // --- Estadísticas de Impacto (Native jsPDF Drawing - 100% reliable) ---
+        if (currentY + 60 > 280) { doc.addPage(); currentY = 20; }
+
+        const totalSedesCount = Array.isArray(allSedes) ? allSedes.length : 0;
+        const affCountStats = Array.isArray(affectedSedes) ? affectedSedes.length : 0;
+        const nearCountStats = Array.isArray(nearbySedes) ? nearbySedes.length : 0;
+        const allAffected = [...(affectedSedes || []), ...(nearbySedes || [])];
+        const critImpact = allAffected.filter(s => s.procesos && s.procesos.some(p => p.criticidad === 'Crítica')).length;
+
+        // Section title
+        doc.setFontSize(13);
+        doc.setTextColor(15, 23, 42);
+        doc.text("Estadísticas de Impacto", 14, currentY);
+        currentY += 8;
+
+        // Draw 4 metric cards
+        const cardW = (pageWidth - 28) / 4 - 3;
+        const metricCards = [
+            { label: 'Sedes Totales', value: totalSedesCount, color: [30, 64, 175] },
+            { label: 'Afectacion Directa', value: affCountStats, color: [220, 38, 38] },
+            { label: 'Sedes Cercanas', value: nearCountStats, color: [217, 119, 6] },
+            { label: 'Impacto Critico', value: critImpact, color: [234, 88, 12] },
+        ];
+
+        metricCards.forEach((card, i) => {
+            const x = 14 + i * (cardW + 4);
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(x, currentY, cardW, 22, 2, 2, 'F');
+            doc.setFillColor(card.color[0], card.color[1], card.color[2]);
+            doc.rect(x, currentY, 3, 22, 'F');
+            doc.setFontSize(7);
+            doc.setTextColor(100, 116, 139);
+            doc.text(card.label, x + 6, currentY + 7);
+            doc.setFontSize(16);
+            doc.setTextColor(card.color[0], card.color[1], card.color[2]);
+            doc.text(String(card.value), x + 6, currentY + 17);
+        });
+        currentY += 30;
+
+        // ====================================================================
+        // --- NATIVE BAR CHART: Impacto por Ciudad ---
+        // ====================================================================
+        const cityMapStats = {};
+        [...(allSedes || [])].forEach(s => {
+            const city = s.ciudad || 'Sin ciudad';
+            if (!cityMapStats[city]) cityMapStats[city] = { total: 0, directa: 0, cercana: 0 };
+            cityMapStats[city].total++;
+            if (s.status === 'affected') cityMapStats[city].directa++;
+            else if (s.status === 'nearby') cityMapStats[city].cercana++;
+        });
+
+        const cityEntries = Object.entries(cityMapStats).filter(([, v]) => v.directa > 0 || v.cercana > 0);
+
+        // Criticality data
+        const critCounts = { 'Critica': 0, 'Alta': 0, 'Media': 0, 'Baja': 0 };
+        const critColors = { 'Critica': [220, 38, 38], 'Alta': [234, 88, 12], 'Media': [234, 179, 8], 'Baja': [59, 130, 246] };
+        allAffected.forEach(sede => {
+            let maxCrit = 'Baja';
+            if (sede.procesos && sede.procesos.length > 0) {
+                const crits = sede.procesos.map(p => p.criticidad);
+                if (crits.includes('Crítica')) maxCrit = 'Critica';
+                else if (crits.includes('Alta')) maxCrit = 'Alta';
+                else if (crits.includes('Media')) maxCrit = 'Media';
+            }
+            critCounts[maxCrit]++;
+        });
+
+        if (currentY + 80 > 280) { doc.addPage(); currentY = 20; }
+
+        // --- Chart Section Title ---
+        doc.setFontSize(11);
+        doc.setTextColor(15, 23, 42);
+        doc.text("Gráficas de Impacto por Ciudad", 14, currentY);
+        currentY += 6;
+
+        // --- Bar Chart Layout ---
+        const chartLeft = 28;           // X start (leaves space for Y labels)
+        const chartTop = currentY;
+        const chartWidth = 120;         // width of bar area in mm
+        const chartHeight = 55;         // height in mm
+        const chartBottom = chartTop + chartHeight;
+
+        // Calculate max value for scaling
+        const maxVal = Math.max(...(cityEntries.length > 0 ? cityEntries.map(([, v]) => v.total) : [1]), 1);
+
+        // Draw chart background
+        doc.setFillColor(248, 250, 252);
+        doc.rect(chartLeft, chartTop, chartWidth, chartHeight, 'F');
+
+        // Draw horizontal grid lines + Y-axis labels
+        const gridLines = 4;
+        doc.setFontSize(5.5);
+        doc.setTextColor(148, 163, 184);
+        for (let i = 0; i <= gridLines; i++) {
+            const yPos = chartBottom - (i / gridLines) * chartHeight;
+            const val = Math.round((i / gridLines) * maxVal);
+            doc.setDrawColor(220, 220, 220);
+            doc.line(chartLeft, yPos, chartLeft + chartWidth, yPos);
+            doc.setTextColor(100, 116, 139);
+            doc.text(String(val), chartLeft - 2, yPos + 1, { align: 'right' });
+        }
+
+        // Draw X and Y axes
+        doc.setDrawColor(100, 116, 139);
+        doc.line(chartLeft, chartTop, chartLeft, chartBottom);        // Y axis
+        doc.line(chartLeft, chartBottom, chartLeft + chartWidth, chartBottom);  // X axis
+
+        // Draw bars
+        const numCities = cityEntries.length || 1;
+        const groupW = chartWidth / numCities;
+        const barW = Math.min(groupW * 0.22, 6); // each sub-bar width, max 6mm
+        const barGap = 0.8;
+
+        cityEntries.forEach(([city, v], i) => {
+            const gx = chartLeft + i * groupW + groupW * 0.12;
+
+            // Total bar (light gray)
+            const tH = (v.total / maxVal) * chartHeight;
+            doc.setFillColor(203, 213, 225);
+            doc.rect(gx, chartBottom - tH, barW, tH, 'F');
+
+            // Directa bar (red)
+            const dH = (v.directa / maxVal) * chartHeight;
+            doc.setFillColor(220, 38, 38);
+            doc.rect(gx + barW + barGap, chartBottom - dH, barW, dH, 'F');
+
+            // Cercana bar (orange)
+            const cH = (v.cercana / maxVal) * chartHeight;
+            doc.setFillColor(217, 119, 6);
+            doc.rect(gx + (barW + barGap) * 2, chartBottom - cH, barW, cH, 'F');
+
+            // City label on X axis
+            doc.setFontSize(5.5);
+            doc.setTextColor(71, 85, 105);
+            const cityLabel = city.length > 9 ? city.substring(0, 8) + '.' : city;
+            doc.text(cityLabel, gx + (barW * 1.5), chartBottom + 3.5, { align: 'center' });
+        });
+
+        // Bar chart legend (below)
+        const legendY = chartBottom + 8;
+        const legendItems = [
+            { label: 'Total Sedes', color: [203, 213, 225] },
+            { label: 'Afectacion Directa', color: [220, 38, 38] },
+            { label: 'Sedes Cercanas', color: [217, 119, 6] },
+        ];
+        legendItems.forEach((item, i) => {
+            const lx = chartLeft + i * 40;
+            doc.setFillColor(item.color[0], item.color[1], item.color[2]);
+            doc.rect(lx, legendY, 4, 3, 'F');
+            doc.setFontSize(6);
+            doc.setTextColor(71, 85, 105);
+            doc.text(item.label, lx + 5.5, legendY + 2.5);
+        });
+
+        // --- Criticality Panel to the right of bar chart ---
+        const critX = chartLeft + chartWidth + 8;
+        const critPanelW = pageWidth - critX - 14;
+
+        doc.setFontSize(9);
+        doc.setTextColor(15, 23, 42);
+        doc.text("Criticidad", critX, chartTop + 4);
+
+        const critEntries = Object.entries(critCounts).filter(([, v]) => v > 0);
+        const totalAff = critEntries.reduce((sum, [, v]) => sum + v, 0) || 1;
+        let critBarY = chartTop + 9;
+        const critBarMaxW = critPanelW - 14;
+
+        critEntries.forEach(([label, val]) => {
+            const pct = val / totalAff;
+            const barFill = pct * critBarMaxW;
+            const col = critColors[label] || [100, 116, 139];
+
+            // Label + count
+            doc.setFontSize(7);
+            doc.setTextColor(51, 65, 85);
+            doc.text(`${label} (${val})`, critX, critBarY + 2.5);
+            critBarY += 4.5;
+
+            // Background bar
+            doc.setFillColor(240, 240, 240);
+            doc.rect(critX, critBarY, critBarMaxW, 4, 'F');
+
+            // Filled bar
+            doc.setFillColor(col[0], col[1], col[2]);
+            doc.rect(critX, critBarY, barFill, 4, 'F');
+
+            // Percentage label
+            doc.setFontSize(6);
+            doc.setTextColor(100, 116, 139);
+            doc.text(`${Math.round(pct * 100)}%`, critX + critBarMaxW + 1, critBarY + 3);
+
+            critBarY += 8;
+        });
+
+        currentY = legendY + 12;
+
+
+
         // --- Human Talent Table (Optional) ---
         if (options.includeColaboradoresList && colabCount > 0) {
             if (currentY + 60 > 280) { doc.addPage(); currentY = 20; }
@@ -98,20 +296,6 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
             currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY) + 10;
         }
 
-        // --- Charts Image ---
-        if (chartsImg) {
-            if (currentY + 80 > 280) { doc.addPage(); currentY = 20; }
-
-            doc.setFontSize(12);
-            doc.setTextColor(15, 23, 42);
-            doc.text("Estadisticas de Impacto", 14, currentY);
-            currentY += 5;
-
-            const chartHeight = 70;
-            const chartWidth = pageWidth - 28;
-            doc.addImage(chartsImg, 'PNG', 14, currentY, chartWidth, chartHeight);
-            currentY += chartHeight + 15;
-        }
 
         // --- Common Table Logic ---
         const renderTable = (title, sedes, headerColor) => {

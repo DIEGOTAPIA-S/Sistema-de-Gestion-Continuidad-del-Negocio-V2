@@ -11,6 +11,7 @@ import { getSedes } from '../services/sedeService';
 import { createEvento, getEventos } from '../services/eventoService';
 import { generatePDFReport } from '../utils/reportGenerator';
 import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import { fetchInfrastructureNearPoint } from '../services/infrastructureService'; // New Service
 import EarthquakeLayer from '../components/EarthquakeLayer'; // Importar capa de sismos
 import WeatherLayer from '../components/WeatherLayer'; // Importar capa de clima
@@ -194,12 +195,28 @@ const MapDashboard = () => {
                         backgroundColor: '#ffffff',
                         scale: 2, // Use 2 for high density but keep positions relative
                         onclone: (clonedDoc) => {
-                            // SANITIZATION: Remove modern CSS functions that html2canvas doesn't support
-                            const styleTags = clonedDoc.getElementsByTagName('style');
-                            for (let tag of styleTags) {
-                                tag.innerHTML = tag.innerHTML.replace(/oklch\([^)]+\)/g, '#3b82f6'); // Blue fallback
-                                tag.innerHTML = tag.innerHTML.replace(/oklab\([^)]+\)/g, '#3b82f6');
+                            // UNIVERSAL SANITIZATION: Replace all unsupported colors
+                            const styles = clonedDoc.getElementsByTagName('style');
+                            for (let s of styles) {
+                                if (s.innerHTML.includes('oklch') || s.innerHTML.includes('oklab')) {
+                                    s.disabled = true;
+                                    s.remove();
+                                }
                             }
+                            const links = clonedDoc.getElementsByTagName('link');
+                            for (let l of links) {
+                                if (l.rel === 'stylesheet') {
+                                    l.disabled = true;
+                                    l.remove();
+                                }
+                            }
+                            // Inline styles
+                            clonedDoc.querySelectorAll('*').forEach(el => {
+                                const s = el.getAttribute('style');
+                                if (s && (s.includes('oklch') || s.includes('oklab'))) {
+                                    el.setAttribute('style', s.replace(/oklch\([^)]+\)/g, '#3b82f6').replace(/oklab\([^)]+\)/g, '#3b82f6'));
+                                }
+                            });
                         },
                         ignoreElements: (node) => {
                             if (!node || !node.classList) return false;
@@ -219,31 +236,29 @@ const MapDashboard = () => {
                 } catch (mapErr) {
                     console.error("Error capturando Mapa (html2canvas sanitized):", mapErr);
                 }
-            } else {
-                console.warn("Captura omitida: Elemento del mapa no encontrado.");
             }
 
-            // Capture Charts
+            // Capture Charts using html-to-image (better for modern CSS/oklch)
             let chartsImg = null;
-            // Always try to capture charts from the hidden container to ensure they are in the report
-            const chartsElement = document.getElementById('charts-capture-hidden') || document.getElementById('charts-capture');
+            const chartsElement = document.getElementById('charts-capture-hidden');
+
             if (chartsElement) {
                 try {
-                    console.log("Capturando gráficas para el reporte...");
-                    const canvas = await html2canvas(chartsElement, {
-                        useCORS: true,
+                    console.log("Esperando renderizado de gráficas (3.5s)...");
+                    await new Promise(resolve => setTimeout(resolve, 3500));
+
+                    console.log("Capturando gráficas con html-to-image...");
+                    chartsImg = await toPng(chartsElement, {
                         backgroundColor: '#ffffff',
-                        logging: false,
-                        onclone: (clonedDoc) => {
-                            const styleTags = clonedDoc.getElementsByTagName('style');
-                            for (let tag of styleTags) {
-                                tag.innerHTML = tag.innerHTML.replace(/oklch\([^)]+\)/g, '#ffffff');
-                            }
+                        quality: 1,
+                        pixelRatio: 2,
+                        style: {
+                            visibility: 'visible'
                         }
                     });
-                    chartsImg = canvas.toDataURL('image/png');
+                    console.log("Captura de gráficas exitosa");
                 } catch (chartErr) {
-                    console.error("Error capturing Charts:", chartErr);
+                    console.error("Error capturing Charts with html-to-image:", chartErr);
                 }
             }
 
@@ -568,10 +583,19 @@ const MapDashboard = () => {
                         </div>
                     )}
 
-                    {/* Ghost Charts for PDF Capture (Always present for report) */}
-                    {sedesWithStatus && sedesWithStatus.length > 0 && (
-                        <div id="charts-capture-hidden" style={{ position: 'absolute', top: '-10000px', left: '-10000px', width: '1200px', zIndex: -1 }}>
-                            <DashboardCharts sedes={sedesWithStatus} />
+                    {/* Ghost Charts for PDF Capture (Optimized style with FIXED HEIGHT & ABSOLUTE POS) */}
+                    {sedesWithStatus && (
+                        <div id="charts-capture-hidden" style={{
+                            position: 'absolute',
+                            top: '-5000px',
+                            left: 0,
+                            width: '1200px',
+                            height: '800px',
+                            zIndex: -1000,
+                            background: 'white',
+                            visibility: 'visible'
+                        }}>
+                            <DashboardCharts sedes={sedesWithStatus} pdfMode={true} />
                         </div>
                     )}
                 </div>

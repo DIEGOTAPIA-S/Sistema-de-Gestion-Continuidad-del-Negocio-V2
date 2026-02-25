@@ -4,21 +4,22 @@ Write-Host "Iniciando servidor Django..." -ForegroundColor Green
 # 1. Entrar a la carpeta del backend
 Set-Location backend
 
-# 2. Iniciar con el entorno virtual de la raíz
-if (Test-Path "..\venv\Scripts\python.exe") {
-    Write-Host "Usando entorno virtual del proyecto (root/venv)..." -ForegroundColor Cyan
-    & "..\venv\Scripts\python.exe" manage.py runserver
+# 2. Intentar con el venv del proyecto primero, luego con python global
+$venvPython = "..\venv\Scripts\python.exe"
+$venvHasDjango = $false
+
+if (Test-Path $venvPython) {
+    $djangoCheck = & $venvPython -c "import django" 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        $venvHasDjango = $true
+        Write-Host "Usando entorno virtual del proyecto (root/venv)..." -ForegroundColor Cyan
+        & $venvPython manage.py runserver
+    }
 }
-else {
-    Write-Host "No se encontró el entorno virtual 'venv' en la raíz." -ForegroundColor Red
-    Write-Host "Intentando con python global..." -ForegroundColor Yellow
-    try {
-        python manage.py runserver
-    }
-    catch {
-        Write-Host "Error crítico: No se pudo iniciar Django." -ForegroundColor Red
-        Pause
-    }
+
+if (-not $venvHasDjango) {
+    Write-Host "El venv no tiene Django. Usando Python global..." -ForegroundColor Yellow
+    python manage.py runserver
 }
 
 # No cerrar ventana inmediatamente si hay error
