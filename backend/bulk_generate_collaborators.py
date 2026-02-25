@@ -25,21 +25,29 @@ BARRIOS_BOGOTÁ = ["Usaquén", "Cedritos", "Suba", "Mazurén", "Colina Campestre
 
 def generate_random_coord(city):
     """Genera coordenadas realistas dentro del casco urbano de las ciudades principales."""
-    if city == "Bogotá":
-        return random.uniform(4.5500, 4.7700), random.uniform(-74.1500, -74.0300)
-    elif city == "Medellín" or city == "Medellin":
-        return random.uniform(6.1500, 6.3000), random.uniform(-75.6000, -75.5400)
-    elif city == "Cali":
-        return random.uniform(3.3400, 3.4800), random.uniform(-76.5400, -76.4700)
-    elif city == "Barranquilla":
-        return random.uniform(10.9300, 11.0200), random.uniform(-74.8400, -74.7700)
-    elif city == "Cartagena":
-        return random.uniform(10.3600, 10.4500), random.uniform(-75.5500, -75.4500)
-    elif city == "Bucaramanga":
-        return random.uniform(7.1000, 7.1500), random.uniform(-73.1300, -73.0800)
+    coords = {
+        "Bogotá": (4.5500, 4.7700, -74.1500, -74.0300),
+        "Medellín": (6.1500, 6.3000, -75.6000, -75.5400),
+        "Medellin": (6.1500, 6.3000, -75.6000, -75.5400),
+        "Cali": (3.3400, 3.4800, -76.5400, -76.4700),
+        "Barranquilla": (10.9300, 11.0200, -74.8400, -74.7700),
+        "Cartagena": (10.3600, 10.4500, -75.5500, -75.4500),
+        "Bucaramanga": (7.1000, 7.1500, -73.1300, -73.0800),
+        "Chía": (4.8200, 4.8800, -74.0600, -74.0200),
+        "Ibagué": (4.4000, 4.4600, -75.2500, -75.1800),
+        "Manizales": (5.0300, 5.0800, -75.5200, -75.4600),
+        "Neiva": (2.9000, 2.9600, -75.3200, -75.2500),
+        "Pereira": (4.7800, 4.8400, -75.7500, -75.6500),
+        "Villavicencio": (4.1000, 4.1600, -73.6600, -73.5800),
+        "Yopal": (5.3100, 5.3500, -72.4200, -72.3600),
+    }
+
+    if city in coords:
+        lat_min, lat_max, lon_min, lon_max = coords[city]
+        return random.uniform(lat_min, lat_max), random.uniform(lon_min, lon_max)
     else:
-        # Fallback genérico para otras ciudades (Bogotá aprox)
-        return random.uniform(4.6000, 4.7500), random.uniform(-74.1200, -74.0400)
+        # Fallback de seguridad (un poco fuera de Bogotá para notar errores si los hay)
+        return random.uniform(4.5000, 4.8000), random.uniform(-74.2000, -74.0000)
 
 def generate_bulk_data():
     print("🚀 Iniciando generación masiva de colaboradores...")
