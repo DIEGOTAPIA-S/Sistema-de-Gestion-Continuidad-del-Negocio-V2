@@ -2,7 +2,7 @@
 Write-Host "Iniciando servidor Django..." -ForegroundColor Green
 
 # 1. Entrar a la carpeta del backend
-cd backend
+Set-Location backend
 
 # 2. Iniciar con el entorno virtual de la raíz
 if (Test-Path "..\venv\Scripts\python.exe") {

@@ -10,7 +10,7 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
 
 # 2. Entrar a la carpeta del frontend
 if (Test-Path "frontend-react") {
-    cd frontend-react
+    Set-Location frontend-react
 }
 else {
     Write-Host "Error: No se encuentra la carpeta 'frontend-react'." -ForegroundColor Red
