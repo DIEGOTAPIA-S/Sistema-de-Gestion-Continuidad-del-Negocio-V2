@@ -23,12 +23,20 @@ Sistema avanzado para la gestión de la continuidad del negocio, análisis de im
 ## ⚙️ Instalación y Ejecución
 
 ### 1. Configurar Backend (API)
-El proyecto incluye un entorno virtual en `backend/venv`.
 
-```bash
-cd backend
-# Activar entorno (Windows)
-& ".\venv\Scripts\python.exe" manage.py runserver
+> ⚠️ **Nota sobre el entorno virtual:** El venv del proyecto está en la carpeta
+> `continuidad - app\venv\` (sin la triple `p`). Esto se debe a cómo se creó originalmente.
+> Usa siempre esa ruta para activar el entorno.
+
+```powershell
+# Paso 1: Activar el entorno virtual (desde cualquier terminal)
+"c:\Users\Santiago Castañeda\OneDrive\Escritorio\continuidad -  app\venv\Scripts\activate.bat"
+
+# Paso 2: Entrar a la carpeta del backend
+cd "c:\Users\Santiago Castañeda\OneDrive\Escritorio\continuidad -  appp\backend"
+
+# Paso 3: Iniciar el servidor
+python manage.py runserver
 ```
 El servidor API iniciará en: `http://127.0.0.1:8000/`
 
@@ -47,10 +55,20 @@ La aplicación web estará disponible en: `http://localhost:5173/` (o el puerto 
 
 ## 🔐 Credenciales de Acceso
 
-| Rol | Usuario | Contraseña | Permisos |
-| :--- | :--- | :--- | :--- |
-| **Administrador** | `admin` | `admin123` | Control total, CRUD de usuarios/sedes, Panel Django. |
-| **Analista** | *crear* | *crear* | Visualización de mapas, análisis de impacto, generación de reportes. |
+> ⚠️ **Las contraseñas NO se publican aquí.** Solicítalas al administrador del sistema o créalas con los pasos a continuación.
+
+**Crear/restablecer el usuario administrador:**
+```bash
+cd backend
+.\venv\Scripts\python.exe manage.py createsuperuser
+```
+
+**Crear un usuario Analista:** Ingresa como admin al sistema y usa el módulo de gestión de usuarios.
+
+| Rol | Permisos |
+| :--- | :--- |
+| **Administrador** | Control total, CRUD de usuarios/sedes, Panel Django. |
+| **Analista** | Visualización de mapas, análisis de impacto, generación de reportes. |
 
 ## 🛠️ Funcionalidades Principales
 

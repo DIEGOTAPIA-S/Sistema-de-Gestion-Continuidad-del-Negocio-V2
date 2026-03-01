@@ -1,28 +1,24 @@
 # Script para iniciar el Backend (Django)
 Write-Host "Iniciando servidor Django..." -ForegroundColor Green
 
-# 1. Entrar a la carpeta del backend
-Set-Location backend
+# Entrar a la carpeta del backend
+Set-Location "$PSScriptRoot\backend"
 
-# 2. Intentar con el venv del proyecto primero, luego con python global
-$venvPython = "..\venv\Scripts\python.exe"
-$venvHasDjango = $false
+# Ruta del entorno virtual real del proyecto
+# NOTA: el venv está en "continuidad -  app" (sin triple p) por cómo fue creado originalmente
+$venvActivate = "C:\Users\Santiago Castañeda\OneDrive\Escritorio\continuidad -  app\venv\Scripts\python.exe"
 
-if (Test-Path $venvPython) {
-    $djangoCheck = & $venvPython -c "import django" 2>&1
-    if ($LASTEXITCODE -eq 0) {
-        $venvHasDjango = $true
-        Write-Host "Usando entorno virtual del proyecto (root/venv)..." -ForegroundColor Cyan
-        & $venvPython manage.py runserver
-    }
+if (Test-Path $venvActivate) {
+    Write-Host "Usando entorno virtual del proyecto..." -ForegroundColor Cyan
+    & $venvActivate manage.py runserver
 }
-
-if (-not $venvHasDjango) {
-    Write-Host "El venv no tiene Django. Usando Python global..." -ForegroundColor Yellow
+else {
+    Write-Host "Venv no encontrado. Usando Python global (asegurate de tener las dependencias instaladas)..." -ForegroundColor Yellow
     python manage.py runserver
 }
 
 # No cerrar ventana inmediatamente si hay error
 if ($LASTEXITCODE -ne 0) {
+    Write-Host "El servidor tuvo un error. Revisa los mensajes anteriores." -ForegroundColor Red
     Pause
 }

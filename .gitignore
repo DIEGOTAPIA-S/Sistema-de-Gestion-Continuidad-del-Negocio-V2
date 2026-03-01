@@ -44,3 +44,7 @@ build/
 backend/dist/
 backend/build/
 backend/__pycache__/
+
+# Ngrok (ejecutable y archivo comprimido — no subir al repositorio)
+ngrok.exe
+ngrok.zip

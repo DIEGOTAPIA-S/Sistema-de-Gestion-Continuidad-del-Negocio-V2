@@ -1,51 +1,127 @@
-# 📘 Manual de Usuario - Sistema de Continuidad (v2.5)
-
-Bienvenido al Sistema de Gestión de Continuidad del Negocio (BIA).
-
----
-
-## 1. Acceso al Sistema
-
-Para ingresar, acceda a la URL proporcionada por el administrador (ej. `http://localhost:5173` en local).
-
-**Credenciales por defecto:**
-*   Usuario: `admin`
-*   Contraseña: `admin123` (o la asignada por sistemas)
-*   **Segundo Factor (2FA)**: Al ingresar, si tiene el 2FA activo, deberá ingresar el código de 6 dígitos de su aplicación (Microsoft Authenticator) o solicitar envío por correo.
+# Manual de Usuario — SGCN v2
+**Sistema de Gestión de Continuidad del Negocio**
+*Versión 2 | Febrero 2026*
 
 ---
 
-## 2. Configuración de Seguridad (2FA)
+## 1. Acceso y Roles
 
-Para proteger su cuenta:
-1. Ingrese a la pestaña **Seguridad** en el panel lateral.
-2. Active el "Segundo Factor de Autenticación".
-3. Escanee el código QR con **Microsoft Authenticator** (Verá el nombre "SG Continuidad").
-4. Confirme el código inicial para activar.
+Ingrese con sus credenciales corporativas (usuario + contraseña + código OTP de autenticación de dos factores).
 
-### 🗺️ Dashboard Geoespacial
-Visualice todas las sedes operativas en el mapa.
-*   **Navegación**: Use el zoom y arrastre para explorar.
-*   **Filtrado**: Use el panel lateral para buscar sedes por nombre o ciudad.
-
-### ⚠️ Simulación de Eventos
-Herramienta para analizar el impacto de desastres.
-1.  **Dibujar Zona**: Seleccione la herramienta de dibujo (polígono/círculo) en el mapa.
-2.  **Delimitar Área**: Dibuje la zona afectada sobre el mapa.
-3.  **Resultados Automáticos**:
-    *   El sistema identificará qué sedes están dentro del incidente.
-    *   Se calculará el impacto financiero y operativo.
-
-### 📊 Reportes
-Genere informes PDF detallados con un solo clic, incluyendo capturas del estado actual del mapa y gráficos estadísticos.
+| Rol | Capacidades |
+|-----|-------------|
+| **👮 Administrador** | Acceso total. Gestión de usuarios, sedes, procesos críticos y carga/borrado de datos de personal. |
+| **🕵️ Analista** | Visualización de mapas, capas y alertas. Puede simular sismos y generar reportes. **No** ve datos de contacto sensibles. |
 
 ---
 
-## 3. Administración
+## 2. Interfaz Principal
 
-El menú de administración permite:
-*   Gestionar Usuarios y Roles.
-*   Registrar nuevas Sedes y sus Coordenadas.
-*   Definir Procesos Críticos de Negocio.
+La pantalla principal tiene tres áreas:
 
-> Si necesita soporte, contacte al área de TI.
+1. **Mapa Central:** Visor interactivo de Colombia con sedes, sismos y capas según configuración activa.
+2. **Barra lateral izquierda (Dock):** Iconos de acceso rápido a herramientas.
+3. **Panel deslizante (Drawer):** Se abre al seleccionar un icono del Dock.
+
+### Iconos del Dock
+
+| Icono | Función |
+|-------|---------|
+| 🗺️ Capas | Activa/desactiva Sismos, Clima, Tráfico, Personal, Infraestructura y Mapa de Calor |
+| 📊 Métricas | Gráficas de impacto por ciudad y criticidad (visible tras análisis) |
+| 📋 Sedes | Lista de todas las sedes con estado actual |
+| 📜 Historial | Consulta y descarga de eventos pasados |
+| 📥 PDF | Genera el reporte ejecutivo del evento actual |
+| 📰 Noticias | Abre la Sala de Noticias |
+| ❓ Ayuda | Abre este manual interactivo |
+
+---
+
+## 3. Capas de Monitoreo
+
+| Capa | Fuente | Descripción |
+|------|--------|-------------|
+| ⚡ Sismos | USGS | Terremotos en tiempo real. Alerta automática si magnitud > 4.5 cerca de Colombia. |
+| ☁️ Clima | Open-Meteo | Íconos de clima en cada sede. Radar de precipitaciones opcional. |
+| 🚗 Tráfico | Waze | Estado de vías en tiempo real (solo lectura). |
+| 👥 Personal | Backend propio | Colaboradores georeferenciados en campo. |
+| 🏥 Infraestructura | OpenStreetMap | Hospitales, bomberos y policías cercanos a sedes afectadas. |
+| 🔥 Mapa de Calor | Interno | Concentración visual de sedes/colaboradores/eventos. |
+
+---
+
+## 4. Sala de Noticias 📰
+
+Accede desde el botón 📰 en el Dock. Muestra noticias en tiempo real clasificadas por categoría:
+
+| Tab | Categoría | Contenido |
+|-----|-----------|-----------|
+| 🚨 | **Emergencia** | Incendios, explosiones, evacuaciones, fugas de gas en Bogotá |
+| 🤝 | **Factores Sociales** | Protestas, paros, disturbios, huelgas, conflictos de orden público |
+| 🌍 | **Factores Físicos/Ambientales** | Sismos, inundaciones, deslizamientos, vendavales, erupciones |
+| 🔌 | **Servicios Públicos** | Cortes de agua/luz, apagones, fallas en acueducto, EPM, Codensa, EAAB, Emcali |
+| 💻 | **Noticias IT** | Ciberataques, ransomware, brechas de seguridad, caídas de red |
+| 🚦 | **Movilidad** | Cierres viales, accidentes, Transmilenio, bloqueos en Bogotá |
+
+---
+
+## 5. Flujos de Trabajo
+
+### A. Protocolo de Emergencia (Sismo / Incidente)
+
+1. **Alerta automática:** Si el sistema detecta un sismo > 4.5, aparece un popup rojo. Haga clic en él para ir a la zona.
+2. **Activar capas:** Vaya a **Capas** → active *Sismos* y *Personal*.
+3. **Dibujar zona o seleccionar área:** Use las herramientas de dibujo (izquierda del mapa) para marcar la zona afectada, o el sistema lo hará automáticamente al analizar.
+4. **Ver resultados:**
+   - 🔴 **Zona Roja:** Afectación directa
+   - 🟡 **Zona Amarilla:** Radio cercano (< 2 km)
+5. **Generar PDF:** Presione 📥 para el reporte ejecutivo con métricas y mapa.
+6. **Guardar evento:** Presione 💾 para registrar el incidente formalmente en el historial.
+
+### B. Gestión de Personal *(Solo Administrador)*
+
+**Cargar datos:**
+1. Ir al menú Datos → *Cargar Personal*
+2. Seleccionar el Excel generado por la herramienta de Geocodificación
+3. El sistema procesa y georreferencia los registros automáticamente
+
+**Post-emergencia — Borrar datos:**
+1. Datos → botón rojo **🗑️ Borrar Base**
+2. Confirmar la acción
+> ⚠️ Esta acción es **irreversible** y elimina todos los datos personales para proteger la privacidad.
+
+### C. Simulacro de Sismo
+
+1. Capas → **Simular Alerta** (ícono 🔔)
+2. Seleccionar magnitud y ubicación de prueba
+3. El sistema generará una alerta ficticia para validar los protocolos internos
+
+---
+
+## 6. Reporte PDF
+
+El PDF generado incluye:
+- Encabezado con fecha, tipo de evento y usuario generador
+- Imagen del mapa en el momento del evento
+- **4 tarjetas de métricas:** Sedes Totales, Afectación Directa, Sedes Cercanas, Impacto Crítico
+- **Gráfica de barras** por ciudad (Total / Directa / Cercana)
+- **Panel de criticidad** por nivel (Crítica, Alta, Media, Baja)
+- Tabla detallada de sedes afectadas y cercanas (con procesos y RTO/MTPD)
+- Lista de colaboradores en zona de riesgo *(si se activa la opción)*
+- Red de apoyo cercana (hospitales, bomberos, policías por sede)
+- Directorio de emergencias nacional
+
+---
+
+## 7. Preguntas Frecuentes
+
+**¿Por qué me llevó al login al guardar cambios?**
+En modo desarrollo, el servidor Vite recarga la página automáticamente al detectar cambios en el código. En producción esto no ocurre.
+
+**¿Las noticias son en tiempo real?**
+Las noticias se obtienen de feeds RSS. Se actualizan cada vez que cambias de pestaña en la Sala de Noticias.
+
+**¿Qué significa el color de un marcador de sede?**
+- 🔵 Azul: Operativa (sin afectación)
+- 🔴 Rojo: Afectación directa
+- 🟡 Amarillo: En radio cercano (< 2km)

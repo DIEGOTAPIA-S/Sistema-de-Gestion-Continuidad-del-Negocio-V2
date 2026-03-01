@@ -65,9 +65,10 @@ const MapDashboard = () => {
 
     // Colaboradores State
     const [showColaboradores, setShowColaboradores] = useState(false);
-    const [showHeatmap, setShowHeatmap] = useState(false); // Nuevo estado para Mapa de Calor
+    const [showHeatmap, setShowHeatmap] = useState(false);
     const [colaboradores, setColaboradores] = useState([]);
-    const [searchTerm, setSearchTerm] = useState(''); // Estado para búsqueda
+    const [loadingColaboradores, setLoadingColaboradores] = useState(false); // ← NUEVO: indicador de carga
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Filter Colaboradores
     const filteredColaboradores = colaboradores.filter(c => {
@@ -83,15 +84,16 @@ const MapDashboard = () => {
         );
     });
 
-    // Load Colaboradores and History on start
+    // Lazy loading: descarga colaboradores SOLO cuando el usuario activa la capa
+    // Así la app abre rápido y solo paga el costo de red cuando se necesita
     useEffect(() => {
         if ((showColaboradores || showHeatmap) && colaboradores.length === 0) {
+            setLoadingColaboradores(true); // Mostrar indicador
             fetchColaboradores()
                 .then(data => setColaboradores(data))
-                .catch(err => console.error("Error loading colaboradores:", err));
+                .catch(err => console.error("Error loading colaboradores:", err))
+                .finally(() => setLoadingColaboradores(false)); // Ocultar indicador
         }
-
-        // Fetch recent seismic events from local DB for persistence
     }, [showColaboradores, showHeatmap]);
 
     useEffect(() => {
@@ -481,6 +483,21 @@ const MapDashboard = () => {
                             <WeatherLayer visible={showWeather} sedes={sedes} />
                             <InfrastructureLayer visible={showInfrastructure} onUpdate={setInfrastructurePoints} />
                             <ColaboradoresLayer visible={showColaboradores} colaboradores={colaboradores} />
+                            {/* Indicador de carga mientras se descargan colaboradores */}
+                            {loadingColaboradores && (
+                                <div style={{
+                                    position: 'absolute', top: '50%', left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    background: 'rgba(255,255,255,0.95)', padding: '16px 24px',
+                                    borderRadius: '10px', boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+                                    zIndex: 9000, display: 'flex', alignItems: 'center', gap: '12px',
+                                    fontSize: '0.95rem', color: '#334155', fontWeight: 500
+                                }}>
+                                    <span style={{ fontSize: '1.5rem', animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span>
+                                    Cargando personal...
+                                    <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                                </div>
+                            )}
                             <HeatmapLayer visible={showHeatmap} points={colaboradores} />
                         </MapComponent>
 

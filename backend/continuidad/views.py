@@ -1,18 +1,22 @@
 from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.contrib.auth.models import User
+from django.utils.html import strip_tags
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import Sede, Proceso, Evento, Colaborador
-from .serializers import (SedeSerializer, ProcesoSerializer, EventoSerializer, 
+from .serializers import (SedeSerializer, ProcesoSerializer, EventoSerializer,
                           UserSerializer, UserCreateSerializer, UserUpdateSerializer,
                           CustomTokenObtainPairSerializer, ColaboradorSerializer)
 from .permissions import IsAdminRole, IsAnalistaRole
+from axes.models import AccessAttempt
+from urllib.parse import quote
 import pandas as pd
+import feedparser
 import json
+import uuid
 from django_otp import user_has_device
 from django.core.cache import cache
-import uuid
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -21,30 +25,70 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         serializer = self.get_serializer(data=request.data)
 
         try:
-            # Esto verificará las credenciales estándar
             serializer.is_valid(raise_exception=True)
         except Exception:
-            # Si las credenciales fallan, dejamos que DRF responda con 401 normalmente
-            from axes.models import AccessAttempt
             return super().post(request, *args, **kwargs)
 
         user = serializer.user
-        
-        # Verificar si el usuario tiene 2FA habilitado
+
+        # Si tiene 2FA, no entregamos tokens aún — solo el pre_auth_id
         if user_has_device(user):
-            # No entregar tokens aún. Entregar pre_auth_id.
             pre_auth_id = str(uuid.uuid4())
-            # Guardar el ID en caché por 5 minutos
             cache.set(f'pre_auth_{pre_auth_id}', user.id, timeout=300)
-            
             return Response({
                 'two_factor_required': True,
                 'pre_auth_id': pre_auth_id,
                 'username': user.username
             }, status=status.HTTP_200_OK)
 
-        # Si no tiene 2FA, login normal (super().post devolverá los tokens)
-        return super().post(request, *args, **kwargs)
+        # Login sin 2FA: obtenemos los tokens y los seteamos en cookies httpOnly
+        response = super().post(request, *args, **kwargs)
+
+        if response.status_code == 200:
+            access_token  = response.data.get('access')
+            refresh_token = response.data.get('refresh')
+            self._set_auth_cookies(response, access_token, refresh_token)
+
+        return response
+
+    @staticmethod
+    def _set_auth_cookies(response, access_token, refresh_token):
+        """
+        Guarda los tokens en cookies httpOnly.
+        httpOnly = JavaScript NO puede leerlas → protege contra XSS.
+        samesite='Lax' → protege contra CSRF en la mayoría de casos.
+        """
+        response.set_cookie(
+            key='access_token',
+            value=access_token,
+            httponly=True,       # JS no puede leer esta cookie
+            secure=False,        # Cambiar a True en producción (requiere HTTPS)
+            samesite='Lax',      # Protección básica contra CSRF
+            max_age=3600,        # 1 hora (igual que ACCESS_TOKEN_LIFETIME)
+            path='/',
+        )
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh_token,
+            httponly=True,
+            secure=False,        # Cambiar a True en producción
+            samesite='Lax',
+            max_age=86400,       # 24 horas (igual que REFRESH_TOKEN_LIFETIME)
+            path='/',
+        )
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def logout_view(request):
+    """
+    Cierra sesión borrando las cookies del token del navegador.
+    Al borrar la cookie en el servidor, el navegador la elimina.
+    """
+    response = Response({'detail': 'Sesión cerrada correctamente.'}, status=status.HTTP_200_OK)
+    response.delete_cookie('access_token',  path='/')
+    response.delete_cookie('refresh_token', path='/')
+    return response
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -195,14 +239,10 @@ class ColaboradorViewSet(viewsets.ModelViewSet):
         return Response({'status': 'success', 'deleted': count, 'message': f'Se eliminaron {count} registros correctamente.'})
 
 
-from rest_framework.decorators import api_view, permission_classes
-import feedparser
-
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_news(request):
     query = request.GET.get('q', 'Colombia Movilidad')
-    from urllib.parse import quote
     encoded_query = quote(query)
     
     rss_url = f"https://news.google.com/rss/search?q={encoded_query}&hl=es-419&gl=CO&ceid=CO:es-419"
@@ -212,7 +252,6 @@ def get_news(request):
     news_items = []
     for entry in feed.entries[:20]:
         summary = entry.summary if 'summary' in entry else ''
-        from django.utils.html import strip_tags
         clean_summary = strip_tags(summary)[:200] + '...' if len(summary) > 200 else strip_tags(summary)
 
         news_items.append({

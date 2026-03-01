@@ -11,6 +11,17 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+
+# Cargar variables del archivo .env si existe (sin librerías externas)
+_env_file = Path(__file__).resolve().parent.parent / '.env'
+if _env_file.exists():
+    with open(_env_file, encoding='utf-8') as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith('#') and '=' in _line:
+                _key, _val = _line.split('=', 1)
+                os.environ.setdefault(_key.strip(), _val.strip())
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +31,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-w(=t@1ghzqvvmpwpcom9bx%&@l07+#di%z&*9@6cw-)fdz#tvl'
+# Lee desde .env — ver backend/.env.example para instrucciones
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-clave-solo-para-desarrollo-local-no-usar-en-produccion'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = ['*']
 
@@ -63,16 +78,13 @@ MIDDLEWARE = [
     'auditlog.middleware.AuditlogMiddleware',
 ]
 
-# CORS - Allow React frontend during development
-# CORS - Allow React frontend during development
+# CORS - Permitir frontend React en desarrollo
 CORS_ALLOW_ALL_ORIGINS = True
 
-# CSRF - Allow Ngrok for remote demo
+# CSRF - Orígenes de confianza
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-    'https://*.ngrok-free.app',
-    'https://*.ngrok.io',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -156,8 +168,16 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # Lee el token JWT desde cookie httpOnly (protege contra XSS)
+        # Fallback: también acepta header Authorization: Bearer para Postman/API tools
+        'continuidad.cookie_auth.CookieJWTAuthentication',
     ],
+    # PAGINACIÓN: desactivada intencionalmente.
+    # Para activarla en el futuro, agregar:
+    #   'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    #   'PAGE_SIZE': 50,
+    # IMPORTANTE: también hay que actualizar todos los servicios del frontend
+    # para leer 'response.data.results' en vez de 'response.data' directamente.
 }
 
 from datetime import timedelta
@@ -186,7 +206,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'seguridad@continuidad.corp'
 
 # Cabeceras de Seguridad (HTTPS/SSL)
-# Nota: Estas se activan solo si el sitio corre en HTTPS (ej: Ngrok o Prod)
+# Nota: Estas se activan solo si el sitio corre en HTTPS (producción)
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'

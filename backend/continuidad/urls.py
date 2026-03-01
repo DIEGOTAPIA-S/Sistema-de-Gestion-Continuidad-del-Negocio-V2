@@ -19,4 +19,5 @@ urlpatterns = [
     path('2fa/confirm/', auth_views.TwoFactorConfirmView.as_view(), name='2fa-confirm'),
     path('2fa/verify/', auth_views.TwoFactorLoginVerifyView.as_view(), name='2fa-verify'),
     path('2fa/send-email/', auth_views.SendEmailOTPView.as_view(), name='2fa-send-email'),
+    path('logout/', views.logout_view, name='logout'),  # Borra cookies de sesión
 ]

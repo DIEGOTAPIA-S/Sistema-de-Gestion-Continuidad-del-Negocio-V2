@@ -102,9 +102,19 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const logout = () => {
-        localStorage.clear();
-        setUser(null);
+    const logout = async () => {
+        try {
+            // Llamar al servidor para que borre las cookies httpOnly
+            // IMPORTANTE: las cookies httpOnly NO se pueden borrar desde JavaScript
+            // Solo el servidor puede borrarlas con Set-Cookie. Por eso necesitamos este endpoint.
+            await api.post('/logout/');
+        } catch (error) {
+            // Si falla el logout del servidor, igual limpiamos el estado local
+            console.warn('Logout en servidor falló, limpiando estado local:', error);
+        } finally {
+            localStorage.clear();
+            setUser(null);
+        }
     };
 
     return (
