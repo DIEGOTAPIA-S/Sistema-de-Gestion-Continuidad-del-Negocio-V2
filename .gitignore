@@ -48,3 +48,7 @@ backend/__pycache__/
 # Ngrok (ejecutable y archivo comprimido — no subir al repositorio)
 ngrok.exe
 ngrok.zip
+
+# Logs del servidor (archivos locales, no versionables)
+backend/logs/
+*.log

@@ -5,10 +5,15 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp import devices_for_user, user_has_device
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.conf import settings
+from smtplib import SMTPException
 import pyotp
 import qrcode
 import io
 import base64
+import random
 from django.core.cache import cache
 import uuid
 
@@ -66,9 +71,10 @@ class TwoFactorConfirmView(APIView):
         if not device:
             return Response({'error': 'No profile in setup'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Usar pyotp con ventana SÚPER amplia (40 = +- 20 min) por desfase horario servidor/celular
+        # valid_window=2 → tolera ±1 período de 30s por desfase de reloj del celular
+        # No usar valores grandes (como 40): un código robado seguiría siendo válido 20 minutos
         totp = pyotp.TOTP(base64.b32encode(device.bin_key).decode().replace('=', ''))
-        if totp.verify(token, valid_window=40):
+        if totp.verify(token, valid_window=2):
             # Eliminar otros dispositivos confirmados antes de activar este
             TOTPDevice.objects.filter(user=user, confirmed=True).delete()
             device.confirmed = True
@@ -76,10 +82,6 @@ class TwoFactorConfirmView(APIView):
             return Response({'status': '2FA activado correctamente'})
         else:
             return Response({'error': 'Código inválido. Verifique su aplicación o la hora de su celular.'}, status=status.HTTP_400_BAD_REQUEST)
-
-from django.core.mail import send_mail
-from django.conf import settings
-import random
 
 class SendEmailOTPView(APIView):
     """
@@ -91,32 +93,39 @@ class SendEmailOTPView(APIView):
         pre_auth_id = request.data.get('pre_auth_id')
         if not pre_auth_id:
             return Response({'error': 'Falta pre_auth_id'}, status=status.HTTP_400_BAD_REQUEST)
-            
+
         user_id = cache.get(f'pre_auth_{pre_auth_id}')
         if not user_id:
             return Response({'error': 'Sesión expirada'}, status=status.HTTP_400_BAD_REQUEST)
-            
-        from django.contrib.auth.models import User
-        user = User.objects.get(id=user_id)
-        
+
+        # CRÍTICO CORREGIDO: filter+first evita DoesNotExist si el cache tiene un ID inválido
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
+
         if not user.email:
             return Response({'error': 'El usuario no tiene un correo configurado para recuperación.'}, status=status.HTTP_400_BAD_REQUEST)
-            
-        # Generar código de 6 dígitos
+
         otp_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
-        
-        # Guardar en caché por 10 minutos
         cache.set(f'email_otp_{pre_auth_id}', otp_code, timeout=600)
-        
-        # Enviar correo
+
         subject = '🔐 Código de Verificación de Dos Pasos'
-        message = f'Hola {user.username},\n\n' \
-                  f'Su código de acceso temporal es: {otp_code}\n\n' \
-                  f'Este código expirará en 10 minutos.\n' \
-                  f'Si usted no solicitó este código, ignore este mensaje.'
-        
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
-        
+        message = (
+            f'Hola {user.username},\n\n'
+            f'Su código de acceso temporal es: {otp_code}\n\n'
+            f'Este código expirará en 10 minutos.\n'
+            f'Si usted no solicitó este código, ignore este mensaje.'
+        )
+
+        # CRÍTICO CORREGIDO: envuelto en try/except — un SMTP caído ya no causa error 500
+        try:
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+        except SMTPException as e:
+            return Response(
+                {'error': 'No se pudo enviar el correo. Contacte al administrador.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
         return Response({'status': 'Código enviado al correo'})
 
 class TwoFactorLoginVerifyView(APIView):
@@ -135,15 +144,17 @@ class TwoFactorLoginVerifyView(APIView):
         user_id = cache.get(f'pre_auth_{pre_auth_id}')
         if not user_id:
             return Response({'error': 'Sesión expirada o inválida'}, status=status.HTTP_400_BAD_REQUEST)
-            
-        from django.contrib.auth.models import User
-        user = User.objects.get(id=user_id)
-        
-        # 1. Intentar con TOTP con ventana SÚPER amplia (40 = +- 20 min) por desfase horario
+
+        # CRÍTICO CORREGIDO: filter+first evita DoesNotExist
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # valid_window=2 → ±1 período (30s) de tolerancia por desfase de reloj
         device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
         if device:
             totp = pyotp.TOTP(base64.b32encode(device.bin_key).decode().replace('=', ''))
-            if totp.verify(token, valid_window=40):
+            if totp.verify(token, valid_window=2):
                 return self._success_response(user, pre_auth_id)
             
         # 2. Intentar con Email OTP (Caché)
@@ -156,14 +167,25 @@ class TwoFactorLoginVerifyView(APIView):
 
     def _success_response(self, user, pre_auth_id):
         refresh = RefreshToken.for_user(user)
-        # Añadir claims personalizados que el serializador normal tiene
         refresh['role'] = user.profile.role if hasattr(user, 'profile') else 'analista'
         refresh['full_name'] = f"{user.first_name} {user.last_name}".strip() or user.username
-        
+
         cache.delete(f'pre_auth_{pre_auth_id}')
-        return Response({
+
+        response = Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token),
             'full_name': refresh['full_name'],
             'role': refresh['role']
         })
+
+        # CRÍTICO CORREGIDO: usuarios con 2FA también reciben la cookie httpOnly
+        # Sin esto, el flujo 2FA quedaba fuera de la protección XSS migrada ayer
+        from continuidad.views import CustomTokenObtainPairView
+        CustomTokenObtainPairView._set_auth_cookies(
+            response,
+            str(refresh.access_token),
+            str(refresh)
+        )
+
+        return response

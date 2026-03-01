@@ -114,6 +114,8 @@ def create_user_profile(sender, instance, created, **kwargs):
         UserProfile.objects.get_or_create(user=instance)
 
 @receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    if hasattr(instance, 'profile'):
+def save_user_profile(sender, instance, created, **kwargs):
+    # Solo al ACTUALIZAR un usuario existente, no al crear uno nuevo
+    # Si se ejecutara al crear, habría una escritura innecesaria justo después de create_user_profile
+    if not created and hasattr(instance, 'profile'):
         instance.profile.save()

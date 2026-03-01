@@ -46,11 +46,13 @@ class ColaboradorSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         request = self.context.get('request')
-        
-        # Ocultar teléfono si no es admin
+
+        # Los analistas no deben ver datos de contacto personal de los colaboradores
+        # Solo el admin tiene acceso completo
         if request and hasattr(request.user, 'profile') and request.user.profile.role != 'admin':
             data.pop('telefono', None)
-            
+            data.pop('email', None)  # El email también es un dato sensible
+
         return data
 
 

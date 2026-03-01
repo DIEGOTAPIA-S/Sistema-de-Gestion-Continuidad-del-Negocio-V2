@@ -165,6 +165,21 @@ class ColaboradorViewSet(viewsets.ModelViewSet):
         if not file:
             return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Fix #10: limitar tamaño del archivo para proteger el servidor
+        MAX_SIZE_MB = 10
+        if file.size > MAX_SIZE_MB * 1024 * 1024:
+            return Response(
+                {'error': f'Archivo demasiado grande. Máximo permitido: {MAX_SIZE_MB}MB'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validar extensión del archivo
+        if not file.name.lower().endswith(('.xlsx', '.xls')):
+            return Response(
+                {'error': 'Solo se permiten archivos Excel (.xlsx o .xls)'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
             df = pd.read_excel(file)
             
