@@ -56,10 +56,19 @@ const MapDashboard = () => {
     }, [showIdleWarning, idleCountdown, logout]);
 
 
+    // Estado del formulario de eventos
+    const [eventDetails, setEventDetails] = useState({
+        description: '',
+        type: 'Servicios Públicos',
+        nivel_alerta: 'verde',
+    });
+
+
     const handleEventChange = (e) => {
         const { name, value } = e.target;
         setEventDetails(prev => ({ ...prev, [name]: value }));
     };
+
     const [sedes, setSedes] = useState([]);
     const [filteredSedes, setFilteredSedes] = useState([]);
 
@@ -337,14 +346,16 @@ const MapDashboard = () => {
             const eventoData = {
                 tipo: eventDetails.type,
                 descripcion: eventDetails.description,
-                nivel_alerta: affectedSedes.length > 0 ? 'rojo' : (nearbySedes.length > 0 ? 'amarillo' : 'verde'),
+                nivel_alerta: eventDetails.nivel_alerta || 'verde',  // Usa el nivel elegido por el usuario
                 geometria: JSON.stringify(zones),
                 sedes_afectadas_ids: [...affectedSedes, ...nearbySedes].map(s => s.id)
             };
 
             await createEvento(eventoData);
             alert("Evento registrado exitosamente.");
-            setEventDetails({ ...eventDetails, description: '' });
+            // Resetear solo descripción y nivel, mantener tipo
+            setEventDetails(prev => ({ ...prev, description: '', nivel_alerta: 'verde' }));
+
         } catch (error) {
             alert("Error guardando evento. Verifique la consola.");
             console.error(error);
