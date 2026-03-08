@@ -56,24 +56,28 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         """
         Guarda los tokens en cookies httpOnly.
         httpOnly = JavaScript NO puede leerlas → protege contra XSS.
-        samesite='Lax' → protege contra CSRF en la mayoría de casos.
+        samesite='Lax' → protección básica contra CSRF.
+        secure = True automáticamente en producción (requiere HTTPS).
         """
+        from django.conf import settings as django_settings
+        is_secure = not django_settings.DEBUG  # True en producción (HTTPS), False en local
+
         response.set_cookie(
             key='access_token',
             value=access_token,
-            httponly=True,       # JS no puede leer esta cookie
-            secure=False,        # Cambiar a True en producción (requiere HTTPS)
-            samesite='Lax',      # Protección básica contra CSRF
-            max_age=3600,        # 1 hora (igual que ACCESS_TOKEN_LIFETIME)
+            httponly=True,
+            secure=is_secure,    # HTTPS obligatorio en producción
+            samesite='Lax',
+            max_age=3600,        # 1 hora
             path='/',
         )
         response.set_cookie(
             key='refresh_token',
             value=refresh_token,
             httponly=True,
-            secure=False,        # Cambiar a True en producción
+            secure=is_secure,    # HTTPS obligatorio en producción
             samesite='Lax',
-            max_age=86400,       # 24 horas (igual que REFRESH_TOKEN_LIFETIME)
+            max_age=86400,       # 24 horas
             path='/',
         )
 

@@ -40,7 +40,10 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = ['*']
+# En desarrollo: permite cualquier host. En producción: TI pone el dominio en .env
+# Ejemplo en .env: ALLOWED_HOSTS=sgcn.empresa.com,www.sgcn.empresa.com
+_allowed = os.environ.get('ALLOWED_HOSTS', '')
+ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()] if _allowed else ['*']
 
 
 # Application definition
@@ -78,14 +81,22 @@ MIDDLEWARE = [
     'auditlog.middleware.AuditlogMiddleware',
 ]
 
-# CORS - Permitir frontend React en desarrollo
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS: en desarrollo permite todo, en producción solo el dominio del frontend
+# Configurar en .env: CORS_ALLOWED_ORIGINS=https://sgcn.empresa.com
+_cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+if _cors_origins:
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(',') if o.strip()]
+else:
+    CORS_ALLOW_ALL_ORIGINS = True  # Solo en desarrollo local
 
-# CSRF - Orígenes de confianza
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-]
+# CSRF - Orígenes de confianza (incluye el origen del frontend)
+_csrf_raw = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = (
+    [o.strip() for o in _csrf_raw.split(',') if o.strip()]
+    if _csrf_raw else
+    ['http://localhost:5173', 'http://127.0.0.1:5173']
+)
 
 ROOT_URLCONF = 'config.urls'
 
@@ -199,24 +210,46 @@ AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
 AXES_RESET_ON_SUCCESS = True   # Limpiar contador al entrar con éxito
 AXES_ONLY_USER_FAILURES = True # No bloquear la IP completa, solo el usuario en esa IP
 
-# --- SEGURIDAD AVANZADA ---
+# --- CORREO (Microsoft 365 / Outlook corporativo) ---
+# Configurar en .env con los datos reales de la cuenta de correo corporativa.
+# TI debe habilitar "SMTP Auth" para la cuenta en el Microsoft 365 Admin Center.
+#
+# Variables requeridas en .env para producción:
+#   EMAIL_HOST_USER=notificaciones@empresa.com
+#   EMAIL_HOST_PASSWORD=<contraseña de la cuenta>
+#   DEFAULT_FROM_EMAIL=notificaciones@empresa.com
 
-# Email Backend (Consola para pruebas, cambiar a SMTP en producción)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'seguridad@continuidad.corp'
+_email_user = os.environ.get('EMAIL_HOST_USER', '')
 
-# Cabeceras de Seguridad (HTTPS/SSL)
-# Nota: Estas se activan solo si el sitio corre en HTTPS (producción)
+if _email_user:
+    # Producción: usar SMTP real de Microsoft 365
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.office365.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = _email_user
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', _email_user)
+else:
+    # Desarrollo local: imprime el correo en la consola del servidor (no envía nada)
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = 'dev@localhost'
+
+# --- CABECERAS DE SEGURIDAD ---
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
-# Descomentar en producción real con HTTPS:
-# SECURE_HSTS_SECONDS = 31536000
-# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-# SECURE_HSTS_PRELOAD = True
-# SECURE_SSL_REDIRECT = True
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
+
+# Activar automáticamente en producción (cuando DEBUG=False)
+# Solo funcionan con HTTPS — TI debe configurar el certificado SSL primero
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000          # Forzar HTTPS por 1 año
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = True              # Redirigir HTTP → HTTPS
+    SESSION_COOKIE_SECURE = True            # Cookies solo por HTTPS
+    CSRF_COOKIE_SECURE = True               # CSRF solo por HTTPS
+    # Las cookies de JWT también necesitan secure=True — ya configuradas en views.py
 
 # --- LOGGING ESTRUCTURADO ---
 # Fix #7: guarda errores en archivo con rotación automática

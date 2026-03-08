@@ -38,8 +38,10 @@ const InfrastructureLayer = ({ visible, onUpdate }) => {
 
         const fetchInfrastructure = async () => {
             setLoading(true);
-            const { _southWest, _northEast } = bounds;
-            const bbox = `${_southWest.lat},${_southWest.lng},${_northEast.lat},${_northEast.lng}`;
+            // Usando la API oficial de Leaflet (evitar propiedades internas _southWest/_northEast)
+            const sw = bounds.getSouthWest();
+            const ne = bounds.getNorthEast();
+            const bbox = `${sw.lat},${sw.lng},${ne.lat},${ne.lng}`;
 
             // Query for Police, Fire, Hospitals
             const query = `

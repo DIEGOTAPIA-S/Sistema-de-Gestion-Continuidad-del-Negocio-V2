@@ -11,7 +11,14 @@ const EarthquakeLayer = ({ visible, onAlertsUpdate }) => {
     const USGS_API_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson";
 
     useEffect(() => {
-        // Removed (!visible) check to allow background monitoring
+        // Solo iniciar el monitoreo cuando la capa está activa
+        // Esto evita peticiones innecesarias al USGS cada 5 min cuando está oculta
+        if (!visible) {
+            setEarthquakes([]);
+            if (onAlertsUpdate) onAlertsUpdate([]);
+            return;
+        }
+
         const fetchEarthquakes = async () => {
             setLoading(true);
             try {
@@ -21,19 +28,13 @@ const EarthquakeLayer = ({ visible, onAlertsUpdate }) => {
                 const colQuakes = response.data.features.filter(q => {
                     const [lon, lat] = q.geometry.coordinates;
                     const nameMatch = q.properties.place && q.properties.place.toLowerCase().includes('colombia');
-
-                    // Box 1: Colombia Continental (Aprox)
                     const inMainland = (lat >= -4.5 && lat <= 13.5) && (lon >= -79.5 && lon <= -66.5);
-
-                    // Box 2: San Andrés y Providencia (Mar Caribe)
                     const inIslands = (lat >= 11.5 && lat <= 14.0) && (lon >= -82.0 && lon <= -81.0);
-
                     return nameMatch || inMainland || inIslands;
                 });
 
                 setEarthquakes(colQuakes);
 
-                // Notificar al padre (Dashboard) para mostrar en la Sidebar y generar ALERTAS
                 if (onAlertsUpdate) {
                     const alerts = colQuakes.map(f => ({
                         mag: f.properties.mag,
@@ -46,19 +47,17 @@ const EarthquakeLayer = ({ visible, onAlertsUpdate }) => {
                 }
             } catch (error) {
                 console.error("Error fetching earthquake data:", error);
-                // Silent fail in background
             } finally {
                 setLoading(false);
             }
         };
 
         fetchEarthquakes();
-
-        // Actualizar cada 5 minutos automáticamente
+        // Actualizar cada 5 minutos mientras la capa esté visible
         const interval = setInterval(fetchEarthquakes, 5 * 60 * 1000);
         return () => clearInterval(interval);
 
-    }, []); // Empty dependency array to run constantly
+    }, [visible]); // visible como dependencia — se detiene cuando el usuario oculta la capa
 
     if (!visible) return null;
 

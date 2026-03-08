@@ -54,7 +54,6 @@ const WeatherLayer = ({ sedes, visible }) => {
                 try {
                     const url = `https://api.open-meteo.com/v1/forecast?latitude=${sede.latitud}&longitude=${sede.longitud}&current=temperature_2m,weather_code,wind_speed_10m,is_day&timezone=auto`;
                     const res = await axios.get(url);
-                    console.log(`Clima para ${sede.nombre}:`, res.data.current); // DEBUG: Check is_day value
                     return { id: sede.id, data: res.data.current };
                 } catch (err) {
                     console.error(`Error clima sede ${sede.nombre}:`, err);
