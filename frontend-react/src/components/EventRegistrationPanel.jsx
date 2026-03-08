@@ -1,6 +1,6 @@
 
 const NIVELES = [
-    { value: 'verde', label: '🟢 Verde — Sin impacto significativo', bg: '#dcfce7', border: '#22c55e', text: '#15803d' },
+    { value: 'verde', label: '🔵 Azul — Informativo / Sin impacto operativo', bg: '#dbeafe', border: '#3b82f6', text: '#1d4ed8' },
     { value: 'amarillo', label: '🟡 Amarillo — Impacto moderado / Monitorear', bg: '#fef9c3', border: '#eab308', text: '#854d0e' },
     { value: 'naranja', label: '🟠 Naranja — Impacto alto / Activar planes', bg: '#ffedd5', border: '#f97316', text: '#9a3412' },
     { value: 'rojo', label: '🔴 Rojo — Crítico / Continuidad afectada', bg: '#fee2e2', border: '#ef4444', text: '#991b1b' },

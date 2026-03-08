@@ -131,7 +131,7 @@ const MetricsDashboard = () => {
 
     // Nivel de alerta
     const nivelData = [
-        { name: 'Verde', value: eventosFiltrados.filter(e => e.nivel_alerta === 'verde').length, color: '#22c55e' },
+        { name: 'Azul (Informativo)', value: eventosFiltrados.filter(e => e.nivel_alerta === 'verde').length, color: '#3b82f6' },
         { name: 'Amarillo', value: eventosFiltrados.filter(e => e.nivel_alerta === 'amarillo').length, color: '#eab308' },
         { name: 'Naranja', value: eventosFiltrados.filter(e => e.nivel_alerta === 'naranja').length, color: '#f97316' },
         { name: 'Rojo', value: eventosFiltrados.filter(e => e.nivel_alerta === 'rojo').length, color: '#ef4444' },
