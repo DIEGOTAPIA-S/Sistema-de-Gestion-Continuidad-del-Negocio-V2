@@ -194,6 +194,17 @@ class ColaboradorViewSet(viewsets.ModelViewSet):
             if missing:
                 return Response({'error': f'Missing columns: {", ".join(missing)}'}, status=status.HTTP_400_BAD_REQUEST)
 
+            # -- Detección de cédulas duplicadas DENTRO del mismo archivo --
+            cedulas_en_archivo = df['Identificacion'].astype(str).str.strip()
+            duplicados_en_archivo = cedulas_en_archivo[cedulas_en_archivo.duplicated()].unique().tolist()
+
+            # -- Cédulas que YA EXISTEN en la base de datos --
+            cedulas_set = set(cedulas_en_archivo.tolist())
+            cedulas_existentes = list(
+                Colaborador.objects.filter(identificacion__in=cedulas_set)
+                .values_list('identificacion', flat=True)
+            )
+
             created_count = 0
             updated_count = 0
             errors = []
@@ -250,7 +261,13 @@ class ColaboradorViewSet(viewsets.ModelViewSet):
                 'status': 'success',
                 'created': created_count,
                 'updated': updated_count,
-                'errors': errors[:20] 
+                'duplicados_en_archivo': duplicados_en_archivo,       # Cédulas repetidas en el Excel
+                'cedulas_ya_existentes': cedulas_existentes,           # Cédulas que ya estaban en BD
+                'advertencia': (
+                    f"Se encontraron {len(duplicados_en_archivo)} cédulas duplicadas en el archivo."
+                    if duplicados_en_archivo else None
+                ),
+                'errors': errors[:20]
             })
 
         except Exception as e:
