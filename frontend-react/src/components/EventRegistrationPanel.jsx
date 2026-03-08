@@ -69,7 +69,7 @@ const EventRegistrationPanel = ({ eventDetails, onChange, onSave }) => {
                                         transition: 'all 0.15s'
                                     }}
                                 >
-                                    {n.value === 'verde' ? '🟢' : n.value === 'amarillo' ? '🟡' : n.value === 'naranja' ? '🟠' : '🔴'} {n.value.charAt(0).toUpperCase() + n.value.slice(1)}
+                                    {n.value === 'verde' ? '🔵 Azul' : n.value === 'amarillo' ? '🟡 Amarillo' : n.value === 'naranja' ? '🟠 Naranja' : '🔴 Rojo'}
                                 </button>
                             ))}
                         </div>
