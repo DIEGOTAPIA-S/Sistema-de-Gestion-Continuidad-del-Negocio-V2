@@ -6,7 +6,8 @@ import L from 'leaflet';
 const WeatherLayer = ({ sedes, visible }) => {
     const [weatherData, setWeatherData] = useState({});
     const [loading, setLoading] = useState(false);
-    const [radarTs, setRadarTs] = useState(null); // Timestamp for RainViewer
+    const [error, setError] = useState(null);      // Fix 2.1: estado de error visible
+    const [radarTs, setRadarTs] = useState(null);  // Timestamp for RainViewer
 
     // Mapeo simple de códigos WMO a iconos/descripciones
     const getWeatherIcon = (code, isDay) => {
@@ -34,7 +35,6 @@ const WeatherLayer = ({ sedes, visible }) => {
         return codes[code] || "Condición desconocida";
     };
 
-    // Determine color based on severity (Rain/Storm = Alert)
     const getZoneColor = (code, windSpeed) => {
         if (code >= 95 || windSpeed > 40) return '#dc2626'; // Rojo (Tormenta/Viento Fuerte)
         if (code >= 61) return '#3b82f6'; // Azul (Lluvia)
@@ -42,36 +42,40 @@ const WeatherLayer = ({ sedes, visible }) => {
         return '#f59e0b'; // Amarillo (Sol/Normal)
     };
 
-    // Fetch Weather Data (Open-Meteo) for Sedes
+    // Fix 2.3: Una sola petición batch a Open-Meteo con todas las sedes
+    // Antes: N peticiones en paralelo (una por sede) → Ahora: 1 sola petición
     useEffect(() => {
         if (!visible || !sedes.length) return;
 
         const fetchWeather = async () => {
             setLoading(true);
-            const dataMap = {};
+            setError(null);
+            try {
+                // Open-Meteo acepta arrays de lat/lon separados por coma → 1 petición
+                const lats = sedes.map(s => s.latitud).join(',');
+                const lngs = sedes.map(s => s.longitud).join(',');
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=temperature_2m,weather_code,wind_speed_10m,is_day&timezone=auto`;
 
-            const promises = sedes.map(async (sede) => {
-                try {
-                    const url = `https://api.open-meteo.com/v1/forecast?latitude=${sede.latitud}&longitude=${sede.longitud}&current=temperature_2m,weather_code,wind_speed_10m,is_day&timezone=auto`;
-                    const res = await axios.get(url);
-                    return { id: sede.id, data: res.data.current };
-                } catch (err) {
-                    console.error(`Error clima sede ${sede.nombre}:`, err);
-                    return null;
-                }
-            });
-
-            const results = await Promise.all(promises);
-            results.forEach(res => {
-                if (res) dataMap[res.id] = res.data;
-            });
-
-            setWeatherData(dataMap);
-            setLoading(false);
+                const res = await axios.get(url);
+                // Si hay múltiples ubicaciones, la respuesta es un array; si es una, es un objeto
+                const results = Array.isArray(res.data) ? res.data : [res.data];
+                const dataMap = {};
+                sedes.forEach((sede, i) => {
+                    if (results[i] && results[i].current) {
+                        dataMap[sede.id] = results[i].current;
+                    }
+                });
+                setWeatherData(dataMap);
+            } catch (err) {
+                console.error('Error cargando clima:', err);
+                // Fix 2.1: mensaje de error visible al usuario
+                setError('No se pudo cargar el clima. Verifique su conexión a internet.');
+            } finally {
+                setLoading(false);
+            }
         };
 
         fetchWeather();
-        // Update every 15 mins
         const interval = setInterval(fetchWeather, 15 * 60 * 1000);
         return () => clearInterval(interval);
 
@@ -82,11 +86,9 @@ const WeatherLayer = ({ sedes, visible }) => {
         if (!visible) return;
         const fetchRadarTs = async () => {
             try {
-                // RainViewer public API to get available timestamps
                 const res = await axios.get('https://api.rainviewer.com/public/weather-maps.json');
                 if (res.data && res.data.radar && res.data.radar.past) {
                     const past = res.data.radar.past;
-                    // Get the latest available past timestamp
                     const latest = past[past.length - 1];
                     setRadarTs(latest.time);
                 }
@@ -95,7 +97,6 @@ const WeatherLayer = ({ sedes, visible }) => {
             }
         };
         fetchRadarTs();
-        // Update radar every 10 mins
         const interval = setInterval(fetchRadarTs, 10 * 60 * 1000);
         return () => clearInterval(interval);
     }, [visible]);
@@ -104,13 +105,27 @@ const WeatherLayer = ({ sedes, visible }) => {
 
     return (
         <>
+            {/* Fix 2.1: Mensaje de error visible si la API falla */}
+            {error && (
+                <div style={{
+                    position: 'absolute', top: '10px', left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: '#fef2f2', border: '1px solid #fca5a5',
+                    padding: '6px 14px', borderRadius: '20px',
+                    zIndex: 1000, fontSize: '0.8rem', color: '#dc2626',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                }}>
+                    ⚠️ {error}
+                </div>
+            )}
+
             {/* General Radar Layer (RainViewer) */}
             {radarTs && (
                 <TileLayer
                     url={`https://tile.rainviewer.com/img/generated/${radarTs}/256/{z}/{x}/{y}.png?color=2&smooth=1`}
                     attribution='&copy; <a href="https://www.rainviewer.com/api.html">RainViewer</a>'
                     opacity={0.6}
-                    zIndex={10} // Above base map, below markers
+                    zIndex={10}
                     crossOrigin="anonymous"
                 />
             )}
@@ -123,7 +138,6 @@ const WeatherLayer = ({ sedes, visible }) => {
                 const icon = getWeatherIcon(weather.weather_code, weather.is_day);
                 const color = getZoneColor(weather.weather_code, weather.wind_speed_10m);
 
-                // Create a custom DivIcon for the weather symbol
                 const weatherIcon = L.divIcon({
                     html: `<div style="font-size: 24px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));">${icon}</div>`,
                     className: 'weather-marker-icon',
@@ -133,10 +147,9 @@ const WeatherLayer = ({ sedes, visible }) => {
 
                 return (
                     <div key={`weather-${sede.id}`}>
-                        {/* Area of Influence (Visual Range) */}
                         <Circle
                             center={[sede.latitud, sede.longitud]}
-                            radius={5000} // 5km radius as requested for "Range"
+                            radius={5000}
                             pathOptions={{
                                 color: color,
                                 fillColor: color,
@@ -146,7 +159,6 @@ const WeatherLayer = ({ sedes, visible }) => {
                             }}
                         />
 
-                        {/* Weather Marker offset slightly or on top */}
                         <Marker position={[sede.latitud + 0.01, sede.longitud + 0.01]} icon={weatherIcon}>
                             <Popup>
                                 <div className="p-2">
