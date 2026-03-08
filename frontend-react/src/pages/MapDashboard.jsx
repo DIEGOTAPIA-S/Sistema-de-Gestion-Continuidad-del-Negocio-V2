@@ -1,38 +1,60 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import MapComponent from '../components/MapComponent';
 import Sidebar from '../components/Sidebar';
 import DashboardCharts from '../components/DashboardCharts';
+import MetricsDashboard from '../components/MetricsDashboard';
 import EventHistoryModal from '../components/EventHistoryModal';
 import FilterControl from '../components/FilterControl';
 import SedeListModal from '../components/SedeListModal';
-import AffectedListTable from '../components/AffectedListTable'; // New Component
+import AffectedListTable from '../components/AffectedListTable';
 import { getSedes } from '../services/sedeService';
 import { createEvento, getEventos } from '../services/eventoService';
 import { generatePDFReport } from '../utils/reportGenerator';
 import html2canvas from 'html2canvas';
 import { toPng } from 'html-to-image';
-import { fetchInfrastructureNearPoint } from '../services/infrastructureService'; // New Service
-import EarthquakeLayer from '../components/EarthquakeLayer'; // Importar capa de sismos
-import WeatherLayer from '../components/WeatherLayer'; // Importar capa de clima
-import NewsFeed from '../components/NewsFeed'; // Importar componente de noticias
-import InstructionsModal from '../components/InstructionsModal'; // Importar modal de instrucciones
-import EventRegistrationPanel from '../components/EventRegistrationPanel'; // Importar nuevo panel de eventos
+import { fetchInfrastructureNearPoint } from '../services/infrastructureService';
+import EarthquakeLayer from '../components/EarthquakeLayer';
+import WeatherLayer from '../components/WeatherLayer';
+import NewsFeed from '../components/NewsFeed';
+import InstructionsModal from '../components/InstructionsModal';
+import EventRegistrationPanel from '../components/EventRegistrationPanel';
 import InfrastructureLayer from '../components/InfrastructureLayer';
-import ColaboradoresLayer from '../components/ColaboradoresLayer'; // Importar capa de colaboradores
-import HeatmapLayer from '../components/HeatmapLayer'; // Nueva capa de calor
-import { fetchColaboradores } from '../services/colaboradoresService'; // Importar servicio
-import { downloadColaboradoresCSV } from '../utils/exportUtils'; // Importar utilidad de descarga
-import { booleanPointInPolygon, point } from '@turf/turf'; // Import Turf for analysis
+import ColaboradoresLayer from '../components/ColaboradoresLayer';
+import HeatmapLayer from '../components/HeatmapLayer';
+import { fetchColaboradores } from '../services/colaboradoresService';
+import { downloadColaboradoresCSV } from '../utils/exportUtils';
+import { booleanPointInPolygon, point } from '@turf/turf';
+import useIdleTimer from '../hooks/useIdleTimer';
 
 const MapDashboard = () => {
     const { user, logout } = useAuth();
 
-    // Nueva gestión de estado para el formulario de eventos (Elevado desde Sidebar)
-    const [eventDetails, setEventDetails] = useState({
-        description: '',
-        type: 'Servicios Públicos',
+    // Auto-logout por inactividad de 30 minutos
+    const [showIdleWarning, setShowIdleWarning] = useState(false);
+    const [idleCountdown, setIdleCountdown] = useState(120); // 2 minutos en segundos
+
+    useIdleTimer({
+        onWarning: useCallback(() => {
+            setShowIdleWarning(true);
+            setIdleCountdown(120);
+        }, []),
+        onLogout: useCallback(() => {
+            setShowIdleWarning(false);
+            logout();
+        }, [logout]),
+        idleMinutes: 28,
+        warningMinutes: 2,
     });
+
+    // Cuenta regresiva del aviso de inactividad
+    useEffect(() => {
+        if (!showIdleWarning) return;
+        if (idleCountdown <= 0) { logout(); return; }
+        const t = setTimeout(() => setIdleCountdown(c => c - 1), 1000);
+        return () => clearTimeout(t);
+    }, [showIdleWarning, idleCountdown, logout]);
+
 
     const handleEventChange = (e) => {
         const { name, value } = e.target;
@@ -48,6 +70,7 @@ const MapDashboard = () => {
     const [nearbySedes, setNearbySedes] = useState([]);
 
     const [showCharts, setShowCharts] = useState(false);
+    const [showMetricsPanel, setShowMetricsPanel] = useState(false); // Dashboard de métricas
     const [showHistory, setShowHistory] = useState(false);
     const [showList, setShowList] = useState(false);
     const [showHelp, setShowHelp] = useState(false); // Help Modal State
@@ -353,7 +376,35 @@ const MapDashboard = () => {
 
     return (
         <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#f8fafc' }}>
+
+            {/* Banner de inactividad — aparece 2 minutos antes del logout automático */}
+            {showIdleWarning && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+                    background: '#f97316', color: 'white',
+                    padding: '12px 24px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                    animation: 'pulse 1s infinite'
+                }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>
+                        ⚠️ Tu sesión cerrará por inactividad en {Math.floor(idleCountdown / 60)}:{String(idleCountdown % 60).padStart(2, '0')} minutos
+                    </span>
+                    <button
+                        onClick={() => { setShowIdleWarning(false); setIdleCountdown(120); }}
+                        style={{
+                            background: 'white', color: '#f97316', border: 'none',
+                            padding: '6px 16px', borderRadius: '8px',
+                            fontWeight: 700, cursor: 'pointer'
+                        }}
+                    >
+                        Sigo aquí ✓
+                    </button>
+                </div>
+            )}
+
             {/* Header */}
+
             <header className="dashboard-header" style={{ height: '64px', background: '#2563eb', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', zIndex: 1000 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{ background: 'white', borderRadius: '50%', padding: '5px', height: '32px', width: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -420,6 +471,8 @@ const MapDashboard = () => {
                     onShowHistory={() => setShowHistory(true)}
                     onToggleCharts={() => setShowCharts(!showCharts)}
                     showCharts={showCharts}
+                    onToggleMetrics={() => setShowMetricsPanel(!showMetricsPanel)}
+                    showMetricsPanel={showMetricsPanel}
                     onToggleEarthquakes={() => setShowEarthquakes(!showEarthquakes)}
                     showEarthquakes={showEarthquakes}
                     earthquakeAlerts={earthquakeAlerts}
@@ -590,13 +643,20 @@ const MapDashboard = () => {
                         </div>
                     )}
 
-                    {/* Charts & Details */}
+                    {/* Charts & Details — Análisis de impacto del evento actual */}
                     {showCharts && sedesWithStatus && (
                         <div style={{ padding: '20px' }}>
                             <div id="charts-capture">
                                 <DashboardCharts sedes={sedesWithStatus} />
                             </div>
                             <AffectedListTable affectedSedes={affectedSedes} nearbySedes={nearbySedes} />
+                        </div>
+                    )}
+
+                    {/* Dashboard de Métricas Generales — siempre disponible */}
+                    {showMetricsPanel && (
+                        <div style={{ padding: '20px' }}>
+                            <MetricsDashboard />
                         </div>
                     )}
 

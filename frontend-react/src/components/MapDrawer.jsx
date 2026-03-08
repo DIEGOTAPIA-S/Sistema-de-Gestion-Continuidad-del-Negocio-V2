@@ -20,6 +20,7 @@ const MapDrawer = ({
     onSimulateAlert, onLocate,
     // Layer toggles
     showCharts, onToggleCharts,
+    showMetricsPanel, onToggleMetrics,
     showWeather, onToggleWeather,
     showTraffic, onToggleTraffic,
     showInfrastructure, onToggleInfrastructure,
@@ -69,6 +70,8 @@ const MapDrawer = ({
                     <MetricsTab
                         showCharts={showCharts}
                         onToggleCharts={onToggleCharts}
+                        showMetricsPanel={showMetricsPanel}
+                        onToggleMetrics={onToggleMetrics}
                     />
                 );
             case 'data':

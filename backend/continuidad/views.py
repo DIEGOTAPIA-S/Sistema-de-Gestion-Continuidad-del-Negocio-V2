@@ -211,12 +211,20 @@ class ColaboradorViewSet(viewsets.ModelViewSet):
                         'gerencia': row.get('Gerencia', ''),
                         'modalidad': row.get('Modalidad', 'Presencial'),
                         'direccion': row.get('Direccion', ''),
-                        'telefono': str(row.get('Telefono', '')).replace('.0', ''), # Excel floating point fix
+                        'telefono': str(row.get('Telefono', '')).replace('.0', ''),
                         'email': row.get('Email', ''),
                         'compania': row.get('Compañia', ''),
+                        # Nuevos campos de contacto de emergencia
+                        'contacto_emergencia_nombre': row.get('ContactoEmergencia_Nombre', ''),
+                        'contacto_emergencia_telefono': str(row.get('ContactoEmergencia_Telefono', '')).replace('.0', ''),
                         'latitud': row.get('latitud') if pd.notna(row.get('latitud')) else None,
                         'longitud': row.get('longitud') if pd.notna(row.get('longitud')) else None,
                     }
+
+                    # Campo activo (si viene en el Excel, lo procesa)
+                    if 'Activo' in row and pd.notna(row.get('Activo')):
+                        valor_activo = str(row.get('Activo', 'Si')).strip().lower()
+                        defaults['activo'] = valor_activo not in ('no', 'false', '0', 'n')
 
                     # Enlazar con Sede si existe
                     sede_nombre = row.get('Sede_Asignada')

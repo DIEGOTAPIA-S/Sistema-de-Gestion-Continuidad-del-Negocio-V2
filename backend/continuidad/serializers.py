@@ -40,18 +40,24 @@ class ColaboradorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Colaborador
-        fields = ['id', 'nombres', 'apellidos', 'identificacion', 'cargo', 'area', 'gerencia', 
-                  'modalidad', 'direccion', 'telefono', 'email', 'compania', 'latitud', 'longitud', 'sede_asignada', 'sede_nombre', 'ciudad']
+        fields = [
+            'id', 'nombres', 'apellidos', 'identificacion', 'cargo', 'area', 'gerencia',
+            'modalidad', 'direccion', 'telefono', 'email', 'compania',
+            'contacto_emergencia_nombre', 'contacto_emergencia_telefono',
+            'activo',
+            'latitud', 'longitud', 'sede_asignada', 'sede_nombre', 'ciudad'
+        ]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         request = self.context.get('request')
 
-        # Los analistas no deben ver datos de contacto personal de los colaboradores
-        # Solo el admin tiene acceso completo
+        # Los analistas no ven datos de contacto personal ni de emergencia
         if request and hasattr(request.user, 'profile') and request.user.profile.role != 'admin':
             data.pop('telefono', None)
-            data.pop('email', None)  # El email también es un dato sensible
+            data.pop('email', None)
+            data.pop('contacto_emergencia_nombre', None)
+            data.pop('contacto_emergencia_telefono', None)
 
         return data
 

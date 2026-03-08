@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from auditlog.registry import auditlog
 
 
 class Sede(models.Model):
@@ -60,6 +61,13 @@ class Colaborador(models.Model):
     email = models.EmailField(max_length=150, blank=True)
     compania = models.CharField(max_length=100, blank=True, help_text='Empresa a la que pertenece')
     
+    # Contacto de emergencia (familiar o persona de confianza)
+    contacto_emergencia_nombre = models.CharField(max_length=200, blank=True, help_text='Nombre del contacto en caso de emergencia')
+    contacto_emergencia_telefono = models.CharField(max_length=50, blank=True, help_text='Teléfono del contacto en caso de emergencia')
+    
+    # Estado del colaborador (activo = sigue en la empresa)
+    activo = models.BooleanField(default=True, help_text='Desmarcar si el colaborador ya no está en la empresa')
+    
     latitud = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
     longitud = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
     
@@ -116,6 +124,10 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, created, **kwargs):
     # Solo al ACTUALIZAR un usuario existente, no al crear uno nuevo
-    # Si se ejecutara al crear, habría una escritura innecesaria justo después de create_user_profile
     if not created and hasattr(instance, 'profile'):
         instance.profile.save()
+
+
+# Auditoría: registra automáticamente quién creó, editó o eliminó un colaborador
+# El historial se puede ver en Django Admin → Audit log entries
+auditlog.register(Colaborador)

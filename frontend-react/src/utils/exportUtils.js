@@ -4,33 +4,48 @@ export const downloadColaboradoresCSV = (colaboradores, filename = 'colaboradore
         return;
     }
 
-    // 1. Get all headers from the first object, or predefined list
-    // Predefined is better for ordering and labels
+    // Columnas ordenadas y con nombres claros para Excel
+    // Incluye los nuevos campos: Contacto de Emergencia y Estado (Activo)
     const headers = [
         "Identificacion", "Nombres", "Apellidos", "Cargo", "Area", "Gerencia",
-        "Email", "Compañia", "Modalidad", "Sede_Asignada", "Direccion", "Ciudad", "Telefono"
+        "Modalidad", "Compañia", "Sede_Asignada", "Ciudad",
+        "Direccion", "Telefono", "Email",
+        "Contacto_Emergencia_Nombre", "Contacto_Emergencia_Telefono",
+        "Activo"
     ];
 
-    // 2. Map data rows
+    // Mapa de columna → campo en el objeto del colaborador
+    const fieldMap = {
+        "Identificacion": "identificacion",
+        "Nombres": "nombres",
+        "Apellidos": "apellidos",
+        "Cargo": "cargo",
+        "Area": "area",
+        "Gerencia": "gerencia",
+        "Modalidad": "modalidad",
+        "Compañia": "compania",
+        "Sede_Asignada": (c) => c.sede_nombre || '',
+        "Ciudad": "ciudad",
+        "Direccion": "direccion",
+        "Telefono": "telefono",
+        "Email": "email",
+        "Contacto_Emergencia_Nombre": "contacto_emergencia_nombre",
+        "Contacto_Emergencia_Telefono": "contacto_emergencia_telefono",
+        "Activo": (c) => c.activo !== undefined ? (c.activo ? 'Sí' : 'No') : 'Sí',
+    };
+
     const rows = colaboradores.map(c => {
         return headers.map(header => {
-            // Handle specific field logic if needed
-            let val = c[header.toLowerCase()] || c[header] || ''; // try lowercase first (api standard) then capitalized
-
-            // Special cases mapping if API names differ significantly from headers
-            if (header === "Sede_Asignada") val = c.sede_nombre || c.sede_asignada || '';
-            if (header === "Compañia") val = c.compania || ''; // API is compania (no ñ) usually? Check serializer.
-
-            // Escape quotes
+            const field = fieldMap[header];
+            const val = typeof field === 'function' ? field(c) : (c[field] ?? '');
             const stringVal = String(val).replace(/"/g, '""');
             return `"${stringVal}"`;
-        }).join(';'); // Use semicolon for Excel in Spanish regions
+        }).join(';');
     });
 
-    // 3. Construct CSV Content with BOM for Excel UTF-8
+    // BOM UTF-8 para que Excel abra correctamente los caracteres especiales
     const csvContent = "\uFEFF" + headers.join(';') + "\n" + rows.join('\n');
 
-    // 4. Create Blob and Download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -40,4 +55,6 @@ export const downloadColaboradoresCSV = (colaboradores, filename = 'colaboradore
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 };
+
