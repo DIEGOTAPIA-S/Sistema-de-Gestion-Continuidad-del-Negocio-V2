@@ -4,10 +4,11 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.utils.html import strip_tags
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .models import Sede, Proceso, Evento, Colaborador
+from .models import Sede, Proceso, Evento, Colaborador, EntidadApoyo
 from .serializers import (SedeSerializer, ProcesoSerializer, EventoSerializer,
                           UserSerializer, UserCreateSerializer, UserUpdateSerializer,
-                          CustomTokenObtainPairSerializer, ColaboradorSerializer)
+                          CustomTokenObtainPairSerializer, ColaboradorSerializer,
+                          EntidadApoyoSerializer)
 from .permissions import IsAdminRole, IsAnalistaRole
 from axes.models import AccessAttempt
 from urllib.parse import quote
@@ -280,6 +281,48 @@ class ColaboradorViewSet(viewsets.ModelViewSet):
         Solo permitido para Administradores.
         """
         count, _ = Colaborador.objects.all().delete()
+        return Response({'message': f'Se eliminaron {count} colaboradores correctamente.'})
+
+
+class EntidadApoyoViewSet(viewsets.ModelViewSet):
+    queryset = EntidadApoyo.objects.all()
+    serializer_class = EntidadApoyoSerializer
+
+    def get_queryset(self):
+        queryset = EntidadApoyo.objects.all()
+        # Filtrado por tipo
+        tipo = self.request.query_params.get('tipo', None)
+        if tipo:
+            queryset = queryset.filter(tipo=tipo)
+        
+        # Filtrado por BBOX (lat_min, lon_min, lat_max, lon_max) para optimizar el mapa
+        lat_min = self.request.query_params.get('lat_min')
+        lat_max = self.request.query_params.get('lat_max')
+        lon_min = self.request.query_params.get('lon_min')
+        lon_max = self.request.query_params.get('lon_max')
+
+        if all([lat_min, lat_max, lon_min, lon_max]):
+            queryset = queryset.filter(
+                latitud__gte=lat_min,
+                latitud__lte=lat_max,
+                longitud__gte=lon_min,
+                longitud__lte=lon_max
+            )
+            
+        return queryset
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [permissions.IsAuthenticated]
+        else:
+            permission_classes = [permissions.IsAdminUser]
+        return [permission() for permission in permission_classes]
+
+    @action(detail=False, methods=['DELETE'], permission_classes=[permissions.IsAdminUser])
+    def delete_all(self, request):
+        """Elimina TODA la base de datos de infraestructura oficial."""
+        count, _ = EntidadApoyo.objects.all().delete()
+        return Response({'message': f'Se eliminaron {count} registros oficiales correctamente.'})
         return Response({'status': 'success', 'deleted': count, 'message': f'Se eliminaron {count} registros correctamente.'})
 
 

@@ -128,6 +128,35 @@ def save_user_profile(sender, instance, created, **kwargs):
         instance.profile.save()
 
 
-# Auditoría: registra automáticamente quién creó, editó o eliminó un colaborador
-# El historial se puede ver en Django Admin → Audit log entries
+
+class EntidadApoyo(models.Model):
+    """Infraestructura oficial de apoyo (Hospitales, CAI, Bomberos, etc.)"""
+    TIPO_CHOICES = [
+        ('hospital', 'Hospital / Clínica'),
+        ('police', 'Estación de Policía / CAI'),
+        ('fire_station', 'Estación de Bomberos'),
+        ('emergency_center', 'Centro de Emergencias'),
+        ('otro', 'Otro'),
+    ]
+
+    nombre = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=50, choices=TIPO_CHOICES)
+    direccion = models.CharField(max_length=300, blank=True)
+    telefono = models.CharField(max_length=100, blank=True)
+    latitud = models.DecimalField(max_digits=10, decimal_places=7)
+    longitud = models.DecimalField(max_digits=10, decimal_places=7)
+    fuente = models.CharField(max_length=100, default='IDECA Bogotá', help_text='Origen del dato')
+    fecha_carga = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['tipo', 'nombre']
+        verbose_name = 'Entidad de Apoyo'
+        verbose_name_plural = 'Red de Apoyo Oficial'
+
+    def __str__(self):
+        return f"{self.nombre} ({self.get_tipo_display()})"
+
+
+# Auditoría: registra automáticamente quién creó, editó o eliminó un colaborador o entidad
 auditlog.register(Colaborador)
+auditlog.register(EntidadApoyo)

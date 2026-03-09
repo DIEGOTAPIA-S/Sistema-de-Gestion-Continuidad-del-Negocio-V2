@@ -42,6 +42,10 @@ DEBUG=False
 # Dominio(s) del sistema separados por coma (sin https://)
 ALLOWED_HOSTS=sgcn.empresa.com
 
+# URL del panel de administración (código secreto)
+# Ej: gestion-bc-interna/
+ADMIN_URL=admin/
+
 # ============================================================
 # BASE DE DATOS (PostgreSQL)
 # ============================================================
@@ -248,6 +252,9 @@ systemctl status sgcn
 
 # Verificar que Nginx está corriendo
 systemctl status nginx
+
+# NOTA PARA TI: Se recomienda configurar logrotate para los archivos de log en
+# /ruta/al/proyecto/backend/logs/ para evitar que crezcan indefinidamente.
 ```
 
 ---
@@ -279,3 +286,4 @@ Sin este paso, el correo de recuperación de 2FA no funcionará.
 | `EMAIL_HOST_PASSWORD` | Contraseña cuenta M365 | Contraseña de la cuenta |
 | `CORS_ALLOWED_ORIGINS` | URL frontend | `https://sgcn.empresa.com` |
 | `CSRF_TRUSTED_ORIGINS` | URL frontend (CSRF) | `https://sgcn.empresa.com` |
+| `ADMIN_URL` | Ruta del panel admin | `gestion-bc-interna/` |

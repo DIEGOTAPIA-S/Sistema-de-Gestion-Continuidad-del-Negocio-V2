@@ -396,36 +396,42 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
                     doc.text(`Red de apoyo cercana a: ${sede.nombre}`, 14, currentY);
                     currentY += 5;
 
-                    // Calculate distances from THIS sede to all points
+                    // Calculate distances and prioritize Official data
                     let localPoints = reportInfrastructure.map(p => ({
                         ...p,
                         dist: getDistance(parseFloat(sede.latitud), parseFloat(sede.longitud), p.lat, p.lon)
                     }));
 
-                    // Sort and take top 5
-                    localPoints.sort((a, b) => a.dist - b.dist);
+                    // Sort: Official first (if within a reasonable distance), then by proximity
+                    localPoints.sort((a, b) => {
+                        if (a.isOfficial && !b.isOfficial) return -1;
+                        if (!a.isOfficial && b.isOfficial) return 1;
+                        return a.dist - b.dist;
+                    });
+
                     const topPoints = localPoints.slice(0, 5);
 
                     const infraBody = topPoints.map(p => [
                         p.type === 'police' ? 'Policia' : (p.type === 'fire_station' ? 'Bomberos' : 'Salud'),
-                        p.name,
-                        p.phone || 'No registrado', // Phone Column
+                        p.isOfficial ? `${p.name} (OFICIAL)` : p.name,
+                        p.phone && p.phone !== 'No registrado' ? p.phone : 'Sin tel.',
+                        p.fuente || 'Internet',
                         `${p.dist.toFixed(2)} km`
                     ]);
 
                     autoTable(doc, {
                         startY: currentY,
-                        head: [['Tipo', 'Nombre / Descripcion', 'Contacto', 'Distancia Aprox.']],
+                        head: [['Tipo', 'Nombre', 'Contacto', 'Fuente', 'Distancia']],
                         body: infraBody,
                         theme: 'striped',
-                        headStyles: { fillColor: [75, 85, 99], textColor: 255 }, // Gray
-                        styles: { fontSize: 8 },
+                        headStyles: { fillColor: [75, 85, 99], textColor: 255 },
+                        styles: { fontSize: 7 },
                         columnStyles: {
-                            0: { fontStyle: 'bold', width: 30 },
-                            2: { width: 40 } // Width for Contact
-                        },
-                        didDrawPage: (data) => {
-                            // This callback handles page breaks inside the table itself
+                            0: { fontStyle: 'bold', width: 25 },
+                            1: { width: 45 },
+                            2: { width: 30 },
+                            3: { width: 30 },
+                            4: { width: 25 }
                         }
                     });
 

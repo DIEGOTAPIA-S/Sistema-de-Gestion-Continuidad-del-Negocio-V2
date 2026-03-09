@@ -1,0 +1,17 @@
+{
+"type": "FeatureCollection",
+"name": "eps",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::4686" } },
+"features": [
+{ "type": "Feature", "properties": { "OBJECTID": 1, "Id": 1.0, "Entidad": "COOSALUD EPS-S", "Codigo": "ESS024 - EPS042", "Nit": 900226715.0, "Direccion": "KR 70 C  51 11", "Localidad": 19.0 }, "geometry": { "type": "Point", "coordinates": [ -74.157042699999977, 4.580640300000027 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 2, "Id": 2.0, "Entidad": "NUEVA EPS", "Codigo": "EPS037 - EPSS41", "Nit": 900156264.0, "Direccion": "Carrera 85K 46A 66", "Localidad": 10.0 }, "geometry": { "type": "Point", "coordinates": [ -74.116040859999941, 4.679370753000057 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 3, "Id": 3.0, "Entidad": "MUTUAL SER", "Codigo": "ESS207 - EPS048", "Nit": 806008394.0, "Direccion": "Carrera 15 33 26 Piso 1", "Localidad": 13.0 }, "geometry": { "type": "Point", "coordinates": [ -74.07047010499997, 4.621937198000069 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 4, "Id": 4.0, "Entidad": "ALIANSALUD EPS", "Codigo": "EPS001", "Nit": 830113831.0, "Direccion": "Calle 63 28 76", "Localidad": 12.0 }, "geometry": { "type": "Point", "coordinates": [ -74.076021859999969, 4.657260130000054 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 5, "Id": 5.0, "Entidad": "SALUD TOTAL EPS S.A.", "Codigo": "EPS002", "Nit": 800130907.0, "Direccion": "Carrera 13  49 35", "Localidad": 2.0 }, "geometry": { "type": "Point", "coordinates": [ -74.065906445999985, 4.636704106000025 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 6, "Id": 6.0, "Entidad": "EPS SANITAS", "Codigo": "EPS005", "Nit": 800251440.0, "Direccion": "AK 45  106 76", "Localidad": 1.0 }, "geometry": { "type": "Point", "coordinates": [ -74.055347311999981, 4.694339874000036 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 7, "Id": 7.0, "Entidad": "EPS SURA", "Codigo": "EPS010", "Nit": 800088702.0, "Direccion": "Calle 31  13A  51", "Localidad": 3.0 }, "geometry": { "type": "Point", "coordinates": [ -74.070791099999951, 4.618037719000029 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 8, "Id": 8.0, "Entidad": "FAMISANAR", "Codigo": "EPS017", "Nit": 830003564.0, "Direccion": "Calle 78  13A 07", "Localidad": 2.0 }, "geometry": { "type": "Point", "coordinates": [ -74.057234843999936, 4.664184847000058 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 9, "Id": 9.0, "Entidad": "COMPENSAR EPS", "Codigo": "EPS008", "Nit": 860066942.0, "Direccion": "AC 26 66A  48", "Localidad": 13.0 }, "geometry": { "type": "Point", "coordinates": [ -74.101734406999981, 4.652577133000023 ] } },
+{ "type": "Feature", "properties": { "OBJECTID": 10, "Id": 10.0, "Entidad": "CAPITAL SALUD EPS-S", "Codigo": "ESS118", "Nit": 900298372.0, "Direccion": "Calle 77 A  12A  35", "Localidad": 2.0 }, "geometry": { "type": "Point", "coordinates": [ -74.057174319999945, 4.663100754000027 ] } }
+]
+}

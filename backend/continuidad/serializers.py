@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Sede, Proceso, Evento, Colaborador, UserProfile
+from .models import Sede, Proceso, Evento, Colaborador, UserProfile, EntidadApoyo
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -151,3 +151,8 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             instance.profile.save()
 
         return instance
+
+class EntidadApoyoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EntidadApoyo
+        fields = '__all__'

@@ -8,7 +8,8 @@ router.register(r'sedes', views.SedeViewSet)
 router.register(r'procesos', views.ProcesoViewSet)
 router.register(r'eventos', views.EventoViewSet)
 router.register(r'users', views.UserViewSet)
-router.register(r'colaboradores', views.ColaboradorViewSet) # Nueva ruta
+router.register(r'colaboradores', views.ColaboradorViewSet)
+router.register(r'entidades-apoyo', views.EntidadApoyoViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
