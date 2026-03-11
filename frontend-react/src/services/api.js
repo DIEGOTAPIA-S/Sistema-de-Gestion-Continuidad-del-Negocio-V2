@@ -10,18 +10,10 @@ const api = axios.create({
     withCredentials: true,
 });
 
-// Interceptor de request: agrega el token del localStorage SOLO si existe
-// (para compatibilidad mientras la migración a cookies httpOnly no esté completa)
+// Interceptor de request: Ya no inyectamos el token manualmente.
+// El navegador envía automáticamente las cookies httpOnly gracias a withCredentials: true.
 api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
-        // Si no hay token en localStorage, el navegador enviará la cookie httpOnly
-        // automáticamente — no hace falta hacer nada más aquí
-        return config;
-    },
+    (config) => config,
     (error) => Promise.reject(error)
 );
 

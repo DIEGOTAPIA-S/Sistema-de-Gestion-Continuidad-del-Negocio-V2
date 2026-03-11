@@ -38,12 +38,12 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
+# Por defecto es False para 'fallar seguro' en producción.
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-# En desarrollo: permite cualquier host. En producción: TI pone el dominio en .env
-# Ejemplo en .env: ALLOWED_HOSTS=sgcn.empresa.com,www.sgcn.empresa.com
+# En producción: TI DEBE definir el dominio en .env. Si no se define y DEBUG=False, el sistema no responderá.
 _allowed = os.environ.get('ALLOWED_HOSTS', '')
-ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()] if _allowed else ['*']
+ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()] if _allowed else ([] if not DEBUG else ['*'])
 
 
 # Application definition
@@ -84,11 +84,9 @@ MIDDLEWARE = [
 # CORS: en desarrollo permite todo, en producción solo el dominio del frontend
 # Configurar en .env: CORS_ALLOWED_ORIGINS=https://sgcn.empresa.com
 _cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', '')
-if _cors_origins:
-    CORS_ALLOW_ALL_ORIGINS = False
-    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(',') if o.strip()]
-else:
-    CORS_ALLOW_ALL_ORIGINS = True  # Solo en desarrollo local
+CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(',') if o.strip()] if _cors_origins else []
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Solo permite todo si DEBUG=True
+CORS_ALLOW_CREDENTIALS = True   # NECESARIO para que las cookies httpOnly viajen en peticiones cross-origin
 
 # CSRF - Orígenes de confianza (incluye el origen del frontend)
 _csrf_raw = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
@@ -183,18 +181,26 @@ REST_FRAMEWORK = {
         # Fallback: también acepta header Authorization: Bearer para Postman/API tools
         'continuidad.cookie_auth.CookieJWTAuthentication',
     ],
-    # PAGINACIÓN: desactivada intencionalmente.
-    # Para activarla en el futuro, agregar:
-    #   'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    #   'PAGE_SIZE': 50,
-    # IMPORTANTE: también hay que actualizar todos los servicios del frontend
-    # para leer 'response.data.results' en vez de 'response.data' directamente.
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day',
+        'otp_verify': '5/minute',  # Límite estricto para intentos de OTP
+        'otp_send': '3/minute',    # Límite para reenvío de correos
+    }
 }
 
 from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 # Autenticación y Seguridad avanzada

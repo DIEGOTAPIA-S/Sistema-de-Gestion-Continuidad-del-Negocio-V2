@@ -88,6 +88,7 @@ class SendEmailOTPView(APIView):
     Envía un código de respaldo al correo del usuario.
     """
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'otp_send'
 
     def post(self, request):
         pre_auth_id = request.data.get('pre_auth_id')
@@ -133,6 +134,7 @@ class TwoFactorLoginVerifyView(APIView):
     Verifica el segundo factor durante el login (TOTP o Email).
     """
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'otp_verify'
 
     def post(self, request):
         pre_auth_id = request.data.get('pre_auth_id')
@@ -173,8 +175,6 @@ class TwoFactorLoginVerifyView(APIView):
         cache.delete(f'pre_auth_{pre_auth_id}')
 
         response = Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
             'full_name': refresh['full_name'],
             'role': refresh['role']
         })

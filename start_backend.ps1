@@ -4,8 +4,8 @@ Write-Host "Iniciando servidor Django..." -ForegroundColor Green
 # Entrar a la carpeta del backend
 Set-Location "$PSScriptRoot\backend"
 
-# Ruta del entorno virtual dinámica (busca en la raíz del proyecto)
-$venvActivate = "$PSScriptRoot\..\venv\Scripts\python.exe"
+# Ruta del entorno virtual estándar dentro de la carpeta backend
+$venvActivate = "$PSScriptRoot\backend\venv\Scripts\python.exe"
 
 if (Test-Path $venvActivate) {
     Write-Host "Usando entorno virtual del proyecto..." -ForegroundColor Cyan

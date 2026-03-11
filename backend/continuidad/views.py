@@ -49,6 +49,10 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             access_token  = response.data.get('access')
             refresh_token = response.data.get('refresh')
             self._set_auth_cookies(response, access_token, refresh_token)
+            
+            # ELIMINAR tokens del JSON para evitar que se guarden en localStorage
+            del response.data['access']
+            del response.data['refresh']
 
         return response
 
@@ -84,13 +88,24 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.AllowAny])
+@permission_classes([permissions.IsAuthenticated])
 def logout_view(request):
     """
-    Cierra sesión borrando las cookies del token del navegador.
-    Al borrar la cookie en el servidor, el navegador la elimina.
+    Cierra sesión borrando las cookies y añadiendo el refresh token a la lista negra.
     """
     response = Response({'detail': 'Sesión cerrada correctamente.'}, status=status.HTTP_200_OK)
+    
+    # 1. Intentar invalidar el refresh token en el servidor (Blacklist)
+    refresh_token = request.COOKIES.get('refresh_token')
+    if refresh_token:
+        try:
+            from rest_framework_simplejwt.tokens import RefreshToken
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except Exception:
+            pass # Si falla (por expirado), igual seguimos con el borrado de cookies
+
+    # 2. Borrar cookies del navegador
     response.delete_cookie('access_token',  path='/')
     response.delete_cookie('refresh_token', path='/')
     return response
@@ -350,3 +365,32 @@ def get_news(request):
         })
         
     return Response(news_items)
+
+from rest_framework_simplejwt.views import TokenRefreshView
+class CustomTokenRefreshView(TokenRefreshView):
+    """
+    Refresca el token de acceso leyendo el refresh_token desde la cookie.
+    También implementa la rotación de tokens seteando la nueva cookie.
+    """
+    def post(self, request, *args, **kwargs):
+        # 1. Extraer refresh token de la cookie si no viene en el body
+        refresh_token = request.COOKIES.get('refresh_token')
+        if refresh_token and not request.data.get('refresh'):
+            # Inyectar en data para que el serializador estándar lo encuentre
+            request.data['refresh'] = refresh_token
+        
+        response = super().post(request, *args, **kwargs)
+        
+        if response.status_code == 200:
+            access_token = response.data.get('access')
+            refresh_token = response.data.get('refresh') # Nuevo token si hay rotación
+            
+            # 2. Seteamos las nuevas cookies
+            CustomTokenObtainPairView._set_auth_cookies(response, access_token, refresh_token)
+            
+            # 3. ELIMINAR tokens del JSON
+            del response.data['access']
+            if 'refresh' in response.data:
+                del response.data['refresh']
+                
+        return response

@@ -24,18 +24,26 @@ Sistema avanzado para la gestión de la continuidad del negocio, análisis de im
 
 ### 1. Configurar Backend (API)
 
-> ⚠️ **Nota sobre el entorno virtual:** El venv del proyecto está en la carpeta
-> `continuidad - app\venv\` (sin la triple `p`). Esto se debe a cómo se creó originalmente.
-> Usa siempre esa ruta para activar el entorno.
+> ⚠️ **Nota sobre el entorno virtual:** Asegúrate de tener Python v3.10+ instalado. 
+> Se recomienda crear el entorno virtual (`venv`) dentro de la carpeta `backend/`.
 
 ```powershell
-# Paso 1: Activar el entorno virtual (desde cualquier terminal)
-"c:\Users\Santiago Castañeda\OneDrive\Escritorio\continuidad -  app\venv\Scripts\activate.bat"
+# Paso 1: Entrar a la carpeta del backend
+cd backend
 
-# Paso 2: Entrar a la carpeta del backend
-cd "c:\Users\Santiago Castañeda\OneDrive\Escritorio\continuidad -  appp\backend"
+# Paso 2: Crear el entorno virtual (si no existe)
+python -m venv venv
 
-# Paso 3: Iniciar el servidor
+# Paso 3: Activar el entorno virtual
+# En Windows:
+.\venv\Scripts\activate
+# En Linux/Mac:
+source venv/bin/activate
+
+# Paso 4: Instalar dependencias
+pip install -r requirements.txt
+
+# Paso 5: Iniciar el servidor
 python manage.py runserver
 ```
 El servidor API iniciará en: `http://127.0.0.1:8000/`

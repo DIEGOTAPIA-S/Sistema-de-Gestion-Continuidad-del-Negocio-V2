@@ -8,12 +8,11 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Verificar si hay sesión activa al cargar
-        const token = localStorage.getItem('token');
+        // Verificar si hay sesión activa al cargar basándonos en metadatos (no sensibles)
         const savedUser = localStorage.getItem('user_name');
         const savedRole = localStorage.getItem('role');
 
-        if (token && savedUser) {
+        if (savedUser) {
             setUser({ name: savedUser, role: savedRole });
         }
         setLoading(false);
@@ -32,8 +31,8 @@ export const AuthProvider = ({ children }) => {
                 };
             }
 
-            const { access, refresh, full_name, role } = res.data;
-            saveAuthData(access, refresh, full_name, role);
+            const { full_name, role } = res.data;
+            saveAuthData(full_name, role);
             return { success: true };
         } catch (error) {
             return handleAuthError(error);
@@ -43,18 +42,17 @@ export const AuthProvider = ({ children }) => {
     const verifyOTP = async (preAuthId, token) => {
         try {
             const res = await api.post('/2fa/verify/', { pre_auth_id: preAuthId, token });
-            const { access, refresh, full_name, role } = res.data;
+            const { full_name, role } = res.data;
 
-            saveAuthData(access, refresh, full_name, role);
+            saveAuthData(full_name, role);
             return { success: true };
         } catch (error) {
             return handleAuthError(error);
         }
     };
 
-    const saveAuthData = (access, refresh, name, role) => {
-        localStorage.setItem('token', access);
-        localStorage.setItem('refresh_token', refresh);
+    const saveAuthData = (name, role) => {
+        // IMPORTANTE: Ya no guardamos el token. El navegador maneja la cookie httpOnly.
         localStorage.setItem('user_name', name);
         localStorage.setItem('role', role);
         setUser({ name, role });

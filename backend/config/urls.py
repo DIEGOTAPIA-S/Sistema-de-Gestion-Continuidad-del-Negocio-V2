@@ -4,6 +4,7 @@ from django.urls import path, include
 from django.http import JsonResponse
 from rest_framework_simplejwt.views import TokenRefreshView
 from continuidad.views import CustomTokenObtainPairView
+from continuidad import views
 
 # La URL del admin se lee del .env para que no sea predecible en producción
 # Ejemplo en .env: ADMIN_URL=gestion-interna-sgcn/
@@ -20,6 +21,6 @@ urlpatterns = [
     path(ADMIN_URL, admin.site.urls),
     path('api/', include('continuidad.urls')),
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/refresh/', views.CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('health/', health_check, name='health_check'),  # Sin autenticación
 ]
