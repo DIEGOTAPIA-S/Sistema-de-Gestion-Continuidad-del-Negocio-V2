@@ -10,10 +10,34 @@ const api = axios.create({
     withCredentials: true,
 });
 
-// Interceptor de request: Ya no inyectamos el token manualmente.
-// El navegador envía automáticamente las cookies httpOnly gracias a withCredentials: true.
+// Función utilitaria para leer el token CSRF de la cookie que Django envía al cliente.
+// Django establece una cookie 'csrftoken' (que SÍ es legible por JS, a diferencia del JWT).
+// Este token se adjunta en el header X-CSRFToken para que el servidor verifique la solicitud.
+function getCsrfToken() {
+    const name = 'csrftoken';
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [key, value] = cookie.trim().split('=');
+        if (key === name) return decodeURIComponent(value);
+    }
+    return null;
+}
+
+// Interceptor de request: adjunta el token CSRF en todas las operaciones que modifican datos.
+// GET y HEAD son operaciones de solo lectura → no necesitan CSRF.
+// POST, PUT, PATCH, DELETE son mutables → las protegemos explícitamente.
+const MUTATING_METHODS = ['post', 'put', 'patch', 'delete'];
+
 api.interceptors.request.use(
-    (config) => config,
+    (config) => {
+        if (MUTATING_METHODS.includes(config.method?.toLowerCase())) {
+            const csrfToken = getCsrfToken();
+            if (csrfToken) {
+                config.headers['X-CSRFToken'] = csrfToken;
+            }
+        }
+        return config;
+    },
     (error) => Promise.reject(error)
 );
 

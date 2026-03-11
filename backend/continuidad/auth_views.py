@@ -179,13 +179,17 @@ class TwoFactorLoginVerifyView(APIView):
             'role': refresh['role']
         })
 
-        # CRÍTICO CORREGIDO: usuarios con 2FA también reciben la cookie httpOnly
-        # Sin esto, el flujo 2FA quedaba fuera de la protección XSS migrada ayer
+        # CRÍTICO: usuarios con 2FA también reciben la cookie httpOnly
         from continuidad.views import CustomTokenObtainPairView
         CustomTokenObtainPairView._set_auth_cookies(
             response,
             str(refresh.access_token),
             str(refresh)
         )
+
+        # CSRF: forzar emisión de la cookie csrftoken para que el frontend
+        # pueda adjuntarla en las peticiones POST/PUT/PATCH/DELETE siguientes.
+        from django.middleware.csrf import get_token
+        get_token(self.request)
 
         return response

@@ -96,6 +96,16 @@ CSRF_TRUSTED_ORIGINS = (
     ['http://localhost:5173', 'http://127.0.0.1:5173']
 )
 
+# CSRF Explícito para arquitectura cookie-based:
+# - CSRF_COOKIE_HTTPONLY = False → El JavaScript del frontend PUEDE leer la cookie `csrftoken`
+#   (es intencional: el navegador la lee, la adjunta como header X-CSRFToken y Django la verifica)
+#   NOTA: NO es lo mismo que el token JWT que SÍ es httpOnly. El csrftoken es público por diseño.
+# - CSRF_HEADER_NAME → El header que Django buscará en las peticiones POST/PUT/PATCH/DELETE
+CSRF_COOKIE_HTTPONLY = False  # El frontend JS necesita poder leerla para adjuntarla como header
+CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'  # Header estándar: X-CSRFToken
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_USE_SESSIONS = False  # Usar cookies, no sesiones (compatible con SPA)
+
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [

@@ -3,6 +3,8 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.utils.html import strip_tags
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import Sede, Proceso, Evento, Colaborador, EntidadApoyo
 from .serializers import (SedeSerializer, ProcesoSerializer, EventoSerializer,
@@ -19,6 +21,7 @@ import uuid
 from django_otp import user_has_device
 from django.core.cache import cache
 
+@method_decorator(ensure_csrf_cookie, name='post')  # Garantiza que se envíe la cookie csrftoken al login
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
