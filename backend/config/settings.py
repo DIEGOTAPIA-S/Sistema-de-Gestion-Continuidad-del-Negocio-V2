@@ -119,12 +119,27 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Configuración flexible: PostgreSQL si hay variables, de lo contrario SQLite
+_db_name = os.environ.get('DB_NAME', '')
+
+if _db_name:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': _db_name,
+            'USER': os.environ.get('DB_USER', ''),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -270,19 +285,22 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '[{asctime}] {levelname} {module}: {message}',
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
             'style': '{',
-            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+        'structured': {
+            'format': '[{asctime}] {levelname} | {name} | {message} | {pathname}:{lineno}',
+            'style': '{',
         },
     },
     'handlers': {
         'file_errors': {
+            'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': LOGS_DIR / 'errors.log',
-            'maxBytes': 5 * 1024 * 1024,  # 5MB
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
             'backupCount': 3,
-            'formatter': 'verbose',
-            'level': 'WARNING',
+            'formatter': 'structured', # Formato detallado para análisis técnico
         },
         'console': {
             'class': 'logging.StreamHandler',
@@ -309,3 +327,17 @@ LOGGING = {
         },
     },
 }
+
+# --- CELERY (Tareas en segundo plano) ---
+# Se recomienda usar Redis como broker (un servicio que gestiona la cola de mensajes).
+# Configurar en .env: CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = 'django-db' # Guarda los resultados en la BD para verlos desde el admin
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# Agregar django_celery_results a las apps instaladas (necesario para django-db backend)
+if 'django_celery_results' not in INSTALLED_APPS:
+    INSTALLED_APPS.append('django_celery_results')

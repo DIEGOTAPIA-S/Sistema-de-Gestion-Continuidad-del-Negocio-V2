@@ -113,15 +113,31 @@ El PDF generado incluye:
 
 ---
 
-## 7. Preguntas Frecuentes
+## 7. Mantenimiento Básico (Para el Usuario) 💾
+
+Cuidar tu aplicación es sencillo siguiendo estos pasos:
+
+*   **Copias de Seguridad**: El "corazón" de tus datos es el archivo `backend/db.sqlite3`. Cópialo una vez a la semana en una carpeta externa (como OneDrive o un disco duro).
+*   **Limpieza de Datos**: Usa el botón **"Borrar Base de Datos"** en el panel de Administración del mapa para mantener la app rápida y proteger la privacidad.
+*   **Si algo falla**: 
+    1. Mira la ventana negra (terminal) del Backend. 
+    2. Si ves errores, intenta cerrar todo y volver a iniciar con los scripts de la carpeta raíz.
+    3. Verifica que el archivo `.env` tenga los datos correctos.
+
+---
+
+## 8. Preguntas Frecuentes
 
 **¿Por qué me llevó al login al guardar cambios?**
-En modo desarrollo, el servidor Vite recarga la página automáticamente al detectar cambios en el código. En producción esto no ocurre.
+En modo desarrollo, el servidor recarga la página automáticamente. En producción esto no ocurre.
 
 **¿Las noticias son en tiempo real?**
-Las noticias se obtienen de feeds RSS. Se actualizan cada vez que cambias de pestaña en la Sala de Noticias.
+Se actualizan cada vez que cambias de pestaña en la Sala de Noticias.
 
 **¿Qué significa el color de un marcador de sede?**
 - 🔵 Azul: Operativa (sin afectación)
 - 🔴 Rojo: Afectación directa
 - 🟡 Amarillo: En radio cercano (< 2km)
+
+---
+**Soporte**: Contacte al equipo de TI para reportar errores técnicos o solicitar nuevas funcionalidades.

@@ -32,7 +32,7 @@ echo.
 echo Ejecutando script de geocodificacion...
 echo Por favor espera, esto puede tardar dependiendo de la cantidad de registros...
 echo.
-python geocodificar_excel.py
+python scripts\geocodificar_excel.py
 
 echo.
 echo ===================================================

@@ -165,8 +165,6 @@ El **SGCN (Sistema de Gestión de Continuidad del Negocio)** es una plataforma w
 > | Noticias | Manual — al cambiar pestaña |
 > | Infraestructura emergencia | Datos OSM comunitarios — puede tener días/semanas de retraso |
 
-
-
 ---
 
 ## 8. Instalación y Desarrollo Local

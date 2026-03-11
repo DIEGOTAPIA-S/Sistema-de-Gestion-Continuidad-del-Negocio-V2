@@ -1,100 +1,32 @@
-# 🏥 Sistema de Gestión Continuidad del Negocio (BIA) - Versión 2.5 (React Frontend)
+# 🏥 SGCN V2 — Sistema de Gestión de Continuidad del Negocio
 
-Sistema avanzado para la gestión de la continuidad del negocio, análisis de impacto (BIA) y visualización geoespacial de sedes y riesgos.
+Sistema avanzado para la gestión de la continuidad del negocio (BIA), monitoreo sísmico y visualización geoespacial.
 
-> **Nueva Arquitectura v2.5**: Frontend modernizado con **React + Vite** y Backend en **Django REST Framework**.
+---
 
-## 🚀 Tecnologías
+## 📖 Documentación Maestras
+Para reducir la confusión, hemos consolidado toda la información en dos documentos principales:
 
-*   **Backend**: Python, Django 5, Django REST Framework.
-*   **Base de Datos**: SQLite (Migrable a PostgreSQL/PostGIS).
-*   **Frontend**: React 18, Vite, React Router, TailwindCSS (o similar).
-*   **Mapas**: Leaflet.js + React-Leaflet + Turf.js (Análisis Espacial).
-*   **Gráficos**: Recharts.
-*   **Seguridad**: JWT, 2FA (TOTP/Email), Django Axes (Brute force protection), Seguridad en Headers.
-*   **Reportes**: jsPDF + AutoTable + html2canvas (Capturas de Pantalla).
+1.  **[Manual de Usuario](MANUAL_USUARIO.md)**: Guía paso a paso para el uso de la plataforma, roles (Admin/Analista), mapas y mantenimiento básico.
+2.  **[Documentación Técnica](DOCUMENTACION_TECNICA.md)**: Stack tecnológico, arquitectura, guía de despliegue en producción (PostgreSQL/Nginx) y seguridad.
 
-## 📋 Requisitos Previos
+---
 
-*   **Node.js**: v18+ (Recomendado v20 LTS).
-*   **Python**: v3.10+.
-*   **Navegador Web Moderno**: Chrome, Firefox, Edge.
+## 🚀 Inicio Rápido (Desarrollo)
 
-## ⚙️ Instalación y Ejecución
+Si ya tienes instalado Python y Node.js, usa los scripts simplificados en la raíz:
 
-### 1. Configurar Backend (API)
+1.  **Backend**: Ejecuta `.\start_backend.ps1`
+2.  **Frontend**: Ejecuta `.\start_frontend.ps1`
 
-> ⚠️ **Nota sobre el entorno virtual:** Asegúrate de tener Python v3.10+ instalado. 
-> Se recomienda crear el entorno virtual (`venv`) dentro de la carpeta `backend/`.
+*La aplicación estará disponible en: [http://localhost:5173](http://localhost:5173)*
 
-```powershell
-# Paso 1: Entrar a la carpeta del backend
-cd backend
+---
 
-# Paso 2: Crear el entorno virtual (si no existe)
-python -m venv venv
+## 🛠️ Estructura del Proyecto
+-   `/backend`: API Django (Lógica, Base de Datos, 2FA).
+-   `/frontend-react`: Cliente moderno en React + Vite.
+-   `/data`: Archivos de apoyo y geocodificación.
 
-# Paso 3: Activar el entorno virtual
-# En Windows:
-.\venv\Scripts\activate
-# En Linux/Mac:
-source venv/bin/activate
-
-# Paso 4: Instalar dependencias
-pip install -r requirements.txt
-
-# Paso 5: Iniciar el servidor
-python manage.py runserver
-```
-El servidor API iniciará en: `http://127.0.0.1:8000/`
-
-### 2. Ejecutar Frontend (React)
-Abre una nueva terminal en la carpeta raíz del proyecto:
-
-```bash
-cd frontend-react
-# Instalar dependencias (solo la primera vez)
-npm install
-
-# Iniciar servidor de desarrollo
-npm run dev
-```
-La aplicación web estará disponible en: `http://localhost:5173/` (o el puerto que indique Vite).
-
-## 🔐 Credenciales de Acceso
-
-> ⚠️ **Las contraseñas NO se publican aquí.** Solicítalas al administrador del sistema o créalas con los pasos a continuación.
-
-**Crear/restablecer el usuario administrador:**
-```bash
-cd backend
-.\venv\Scripts\python.exe manage.py createsuperuser
-```
-
-**Crear un usuario Analista:** Ingresa como admin al sistema y usa el módulo de gestión de usuarios.
-
-| Rol | Permisos |
-| :--- | :--- |
-| **Administrador** | Control total, CRUD de usuarios/sedes, Panel Django. |
-| **Analista** | Visualización de mapas, análisis de impacto, generación de reportes. |
-
-## 🛠️ Funcionalidades Principales
-
-1.  **Dashboard Geoespacial**: Visualización de sedes críticas en mapa interactivo.
-2.  **Análisis de Impacto**:
-    *   Dibujo de polígonos/zonas afectadas.
-    *   Detección automática de sedes dentro (Afectadas) y cercanas (< 2km) al evento.
-3.  **Reportes PDF Avanzados**:
-    *   Generación de reportes con capturas de pantalla del mapa y gráficas.
-    *   Tablas detalladas con RTO, MTPD y Criticidad.
-4.  **Historial de Eventos**: Registro y consulta de eventos pasados.
-5.  **Métricas en Tiempo Real**: Gráficas de barras y pastel sobre el impacto del evento.
-6.  **Admin Module & Seguridad**: Gestión de usuarios, sedes y configuración de 2FA.
-7.  **Protección Avanzada**: Sistema contra fuerza bruta y notificaciones de seguridad.
-
-## 📂 Estructura del Proyecto
-
-*   `/backend`: API Django y lógica de negocio.
-*   `/frontend-react`: Nueva interfaz de usuario en React.
-*   `/_VERSION_ANTERIOR_FASTAPI`: Respaldo (Legacy).
-*   `/frontend`: Versión anterior en HTML estático (Legacy).
+---
+**Versión 2.5 — Marzo 2026**
