@@ -1,14 +1,87 @@
 @import "tailwindcss";
 
-/* Custom adjustments */
-/* Fix Leaflet + Tailwind conflict */
-.leaflet-container img {
-    max-width: none !important;
+@theme {
+  --color-brand-blue: #2563eb;
+  --color-brand-dark: #0f172a;
+  --color-brand-accent: #3b82f6;
+  --color-brand-crisis: #ef4444;
 }
 
-/* Hide controls during print/capture if needed, though html2canvas might need ignoreElements */
-@media print {
-    .leaflet-control-container {
-        display: none;
-    }
+/* Base styles */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-blur: blur(12px);
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  @apply bg-slate-950 text-slate-100;
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.8) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+}
+
+.glass-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+/* Glow effects for alerts */
+.glow-red {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+  animation: glow-red-pulse 2s infinite ease-in-out;
+}
+
+@keyframes glow-red-pulse {
+  0% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
+  100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); }
+}
+
+/* Leaflet Overrides */
+.leaflet-container img {
+  max-width: none !important;
+}
+
+.leaflet-control-container .leaflet-control {
+  @apply border-none shadow-lg rounded-xl overflow-hidden glass-card;
+}
+
+.leaflet-bar a {
+  @apply bg-white/90 hover:bg-white text-slate-800 border-b border-slate-200 !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-700/50 rounded-full hover:bg-slate-600/70 transition-all;
+}
+
+/* Custom Fade animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
 }
