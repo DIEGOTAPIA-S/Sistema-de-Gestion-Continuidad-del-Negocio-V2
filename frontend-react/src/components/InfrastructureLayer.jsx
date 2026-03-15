@@ -229,9 +229,10 @@ const InfrastructureLayer = ({ visible, onUpdate }) => {
                     zIndex: 1000,
                     fontWeight: 'bold',
                     fontSize: '0.8rem',
+                    color: '#0f172a',
                     boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
                 }}>
-                    Cargando infraestructura... 📡
+                    Cargando red de apoyo... 📡
                 </div>
             )}
             {visible && map.getZoom() <= 12 && (
@@ -246,10 +247,10 @@ const InfrastructureLayer = ({ visible, onUpdate }) => {
                     zIndex: 1000,
                     fontWeight: 'bold',
                     fontSize: '0.8rem',
-                    color: '#f59e0b',
+                    color: '#c2410c',
                     boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-                }}>
-                    Acerca el mapa para ver policía/hospitales 🔍
+                }} text-brand-dark>
+                    Acerca el mapa para ver la red de apoyo 🔍
                 </div>
             )}
         </>

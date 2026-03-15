@@ -5,40 +5,61 @@
   --color-brand-dark: #0f172a;
   --color-brand-accent: #3b82f6;
   --color-brand-crisis: #ef4444;
-}
 
-/* Base styles */
-:root {
+  /* Glassmorphism Variables */
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-blur: blur(12px);
 }
 
+/* Base styles */
 body {
   margin: 0;
-  overflow: hidden;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  @apply bg-slate-950 text-slate-100;
+  @apply bg-slate-950 text-slate-100 antialiased;
+}
+
+/* Permitir scroll en el contenedor principal */
+#root {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Reset de color para componentes con fondo claro (Modales, Sidebars) */
+.drawer-container, .modal-content, .bg-white, .sidebar-dock-active {
+  @apply text-slate-800;
+}
+
+/* Forzar texto oscuro en la pestaña de configuración específicamente */
+.drawer-container .btn-layer, 
+.drawer-container h3, 
+.drawer-container span, 
+.drawer-container button {
+  color: #1e293b !important;
+}
+
+input, select, textarea {
+  @apply text-slate-800 bg-white;
 }
 
 /* Glassmorphism Utilities */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.8) !important;
-  backdrop-filter: var(--glass-blur) !important;
-  -webkit-backdrop-filter: var(--glass-blur) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+@utility glass-panel {
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
-.glass-card {
-  background: var(--glass-bg) !important;
-  backdrop-filter: var(--glass-blur) !important;
-  -webkit-backdrop-filter: var(--glass-blur) !important;
-  border: 1px solid var(--glass-border) !important;
+@utility glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
 }
 
 /* Glow effects for alerts */
-.glow-red {
+@utility glow-red {
   box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
   animation: glow-red-pulse 2s infinite ease-in-out;
 }
@@ -55,25 +76,41 @@ body {
 }
 
 .leaflet-control-container .leaflet-control {
-  @apply border-none shadow-lg rounded-xl overflow-hidden glass-card;
+  @apply border-none shadow-lg rounded-xl overflow-hidden;
+  @apply glass-card;
 }
 
 .leaflet-bar a {
-  @apply bg-white/90 hover:bg-white text-slate-800 border-b border-slate-200 !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #1e293b !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: #ffffff !important;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-transparent;
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-700/50 rounded-full hover:bg-slate-600/70 transition-all;
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 10px;
+  border: 2px solid rgba(15, 23, 42, 0.3);
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
 }
 
 /* Custom Fade animations */

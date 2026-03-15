@@ -10,54 +10,73 @@ const formatName = (type) => {
 };
 
 export const fetchInfrastructureByBBox = async (south, west, north, east) => {
-    const bbox = `${south},${west},${north},${east}`;
-    const query = `
-        [out:json][timeout:10];
-        (
-          node["amenity"="police"](${bbox});
-          way["amenity"="police"](${bbox});
-          node["amenity"="fire_station"](${bbox});
-          way["amenity"="fire_station"](${bbox});
-          node["amenity"="hospital"](${bbox});
-          way["amenity"="hospital"](${bbox});
-          node["amenity"="clinic"](${bbox});
-          way["amenity"="clinic"](${bbox});
-          node["amenity"="doctors"](${bbox});
-          way["amenity"="doctors"](${bbox});
-        );
-        out center;
-    `;
-
     try {
-        const response = await axios.post('https://overpass-api.de/api/interpreter', query, {
+        // 1. Cargar datos oficiales de nuestra base de datos (Prioridad)
+        const localResponse = await axios.get('/api/entidades-apoyo/', {
+            params: {
+                lat_min: south,
+                lat_max: north,
+                lon_min: west,
+                lon_max: east
+            }
+        });
+        
+        const localPoints = localResponse.data.map(el => ({
+            id: `local-${el.id}`,
+            lat: parseFloat(el.latitud),
+            lon: parseFloat(el.longitud),
+            type: el.tipo,
+            name: el.nombre,
+            address: el.direccion || 'No registrada',
+            phone: el.telefono || '',
+            isOfficial: true,
+            fuente: el.fuente || 'Base de datos interna'
+        }));
+
+        // 2. Cargar datos complementarios de OSM (Overpass)
+        const bbox = `${south},${west},${north},${east}`;
+        const query = `
+            [out:json][timeout:15];
+            (
+              node["amenity"~"police|fire_station|hospital|clinic|doctors"](${bbox});
+              way["amenity"~"police|fire_station|hospital|clinic|doctors"](${bbox});
+            );
+            out center;
+        `;
+
+        const osmResponse = await axios.post('https://overpass-api.de/api/interpreter', query, {
             headers: { 'Content-Type': 'text/plain' }
         });
 
-        return response.data.elements.map(el => {
+        const osmPoints = osmResponse.data.elements.map(el => {
             const tags = el.tags || {};
-
-            // Priorizamos teléfono, luego contact:phone, luego celular o web si no hay nada
-            let contact = tags.phone || tags['contact:phone'] || tags.mobile || tags['contact:mobile'];
-
-            if (!contact && tags.website) {
-                contact = "Sitio Web: " + tags.website;
-            } else if (!contact && tags.email) {
-                contact = tags.email;
-            } else if (!contact) {
-                contact = "No registrado";
-            }
-
             return {
-                id: el.id,
-                lat: el.lat || el.center.lat,
-                lon: el.lon || el.center.lon,
+                id: `osm-${el.id}`,
+                lat: el.lat || (el.center ? el.center.lat : null),
+                lon: el.lon || (el.center ? el.center.lon : null),
                 type: tags.amenity,
-                name: tags.name || (tags.operator ? `${formatName(tags.amenity)} (${tags.operator})` : formatName(tags.amenity)),
-                phone: contact // Mantenemos el nombre de la propiedad 'phone' para compatibilidad con el reporte
+                name: tags.name || formatName(tags.amenity),
+                address: (tags['addr:street'] ? `${tags['addr:street']} ${tags['addr:housenumber'] || ''}` : '').trim(),
+                phone: tags.phone || tags['contact:phone'] || tags.mobile || '',
+                isOfficial: false,
+                fuente: 'OpenStreetMap'
             };
+        }).filter(p => p.lat && p.lon);
+
+        // 3. Combinar y Deduplicar (Lógica similar a InfrastructureLayer)
+        const finalPoints = [...localPoints];
+        osmPoints.forEach(osmP => {
+            const isDuplicate = localPoints.some(localP => {
+                const dist = Math.sqrt(Math.pow(localP.lat - osmP.lat, 2) + Math.pow(localP.lon - osmP.lon, 2));
+                return dist < 0.0012; // Aprox 130m
+            });
+            if (!isDuplicate) finalPoints.push(osmP);
         });
+
+        return finalPoints;
+
     } catch (error) {
-        console.error("Error fetching infrastructure:", error);
+        console.error("Error fetching unified infrastructure:", error);
         return [];
     }
 };

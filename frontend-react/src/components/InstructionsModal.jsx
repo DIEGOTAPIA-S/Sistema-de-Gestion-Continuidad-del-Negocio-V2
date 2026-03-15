@@ -24,7 +24,17 @@ const InstructionsModal = ({ onClose }) => {
                 {/* Header */}
                 <div style={{ background: '#0f172a', padding: '20px 25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h2 style={{ margin: 0, color: 'white', fontSize: '1.2rem' }}>📖 Manual de Uso — SGCN v2</h2>
-                    <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                    <button onClick={onClose} style={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        color: 'white', 
+                        fontSize: '2rem', 
+                        cursor: 'pointer', 
+                        lineHeight: 1, 
+                        opacity: 0.7,
+                        transition: 'opacity 0.2s',
+                        padding: '5px'
+                    }} onMouseOver={(e) => e.target.style.opacity = 1} onMouseOut={(e) => e.target.style.opacity = 0.7}>×</button>
                 </div>
 
                 {/* Tab Navigation */}

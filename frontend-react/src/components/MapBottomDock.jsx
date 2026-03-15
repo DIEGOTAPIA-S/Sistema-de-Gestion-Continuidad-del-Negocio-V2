@@ -3,7 +3,7 @@ import React from 'react';
 /**
  * Barra de herramientas flotante (Dock) en la parte inferior del mapa.
  */
-const MapDock = ({ 
+const MapBottomDock = ({ 
     onGenerateReport, 
     onSaveEvent, 
     onShowHistory, 
@@ -67,4 +67,4 @@ const DockButton = ({ onClick, icon, label, active = false }) => (
     </button>
 );
 
-export default MapDock;
+export default MapBottomDock;

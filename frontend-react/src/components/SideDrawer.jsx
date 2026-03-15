@@ -20,7 +20,7 @@ const SideDrawer = ({ isOpen, onClose, title, children, width = 'w-96' }) => {
                         <h2 className="text-xl font-black text-white tracking-tight uppercase">{title}</h2>
                         <button 
                             onClick={onClose}
-                            className="text-slate-400 hover:text-white transition-colors text-3xl leading-none"
+                            className="text-slate-800 hover:text-black transition-colors text-3xl leading-none font-bold p-2"
                         >
                             ×
                         </button>

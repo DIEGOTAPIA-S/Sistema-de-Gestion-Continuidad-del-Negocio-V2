@@ -19,10 +19,10 @@ const RiskAlertBanner = ({ affectedSedes, nearbySedes, affectedColaboradores }) 
                     </h5>
                     <div className="text-sm text-red-700/80 flex gap-6 mt-1 font-medium">
                         <div className="flex items-center gap-2">
-                            <span className="text-red-500">🏢</span> <strong>{affectedSedes.length}</strong> Sedes en peligro
+                            <span className="text-red-500">🏢</span> <strong>{affectedSedes.length}</strong> Sedes afectadas
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-red-500">👥</span> <strong>{affectedColaboradores.length}</strong> Empleados en riesgo
+                            <span className="text-red-500">👥</span> <strong>{affectedColaboradores.length}</strong> Colaboradores en zona afectada
                         </div>
                     </div>
                 </div>
@@ -33,7 +33,7 @@ const RiskAlertBanner = ({ affectedSedes, nearbySedes, affectedColaboradores }) 
                     onClick={() => downloadColaboradoresCSV(affectedColaboradores)}
                     className="bg-white hover:bg-red-50 border border-red-100 px-5 py-2.5 rounded-xl cursor-pointer text-red-700 font-bold text-sm flex items-center gap-2 transition-all shadow-sm hover:shadow-md"
                 >
-                    📊 Descargar Listado de Impacto
+                    📊 Descargar Listado de Colaboradores en Zona Afectada
                 </button>
             )}
         </div>

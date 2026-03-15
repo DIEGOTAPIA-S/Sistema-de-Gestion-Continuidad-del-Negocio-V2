@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import MapDock from './MapDock';
+import SidebarDock from './SidebarDock';
 import MapDrawer from './MapDrawer';
 
 const Sidebar = (props) => {
@@ -7,11 +7,11 @@ const Sidebar = (props) => {
     const [activeTab, setActiveTab] = useState(null);
 
     const containerStyle = {
-        position: 'relative', // Changed from absolute to relative to take up space in flex layout
+        position: 'relative', 
         height: '100%',
         display: 'flex',
         zIndex: 1000,
-        pointerEvents: 'auto' // Re-enable pointer events for the container
+        pointerEvents: 'auto' 
     };
 
     const dockWrapperStyle = {
@@ -22,7 +22,7 @@ const Sidebar = (props) => {
     const drawerWrapperStyle = {
         position: 'absolute',
         top: 0,
-        left: '60px', // Start after the dock (Desktop)
+        left: '64px', // Alineado con el nuevo ancho del SidebarDock
         height: '100%',
         zIndex: 1001
     };
@@ -38,9 +38,9 @@ const Sidebar = (props) => {
                 }
             `}</style>
             <div style={dockWrapperStyle}>
-                <MapDock
-                    activeTab={activeTab}
-                    onTabChange={setActiveTab}
+                <SidebarDock 
+                    activeTab={activeTab} 
+                    onTabChange={setActiveTab} 
                 />
             </div>
 

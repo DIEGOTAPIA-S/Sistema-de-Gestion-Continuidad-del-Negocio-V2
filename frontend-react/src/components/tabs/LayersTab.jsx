@@ -11,7 +11,7 @@ const LayersTab = ({
     showTraffic, onToggleTraffic,
     showInfrastructure, onToggleInfrastructure,
     showEarthquakes, onToggleEarthquakes,
-    earthquakeAlerts,
+    earthquakeAlerts = [],
     onSimulateAlert,
     onLocate,
     onShowList,

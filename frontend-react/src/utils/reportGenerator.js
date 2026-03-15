@@ -34,15 +34,26 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
 
         // --- Map Image ---
         if (mapImg) {
-            doc.setFontSize(12);
-            doc.setTextColor(15, 23, 42);
-            doc.text("Mapa del Evento", 14, currentY);
-            currentY += 5;
+            try {
+                doc.setFontSize(12);
+                doc.setTextColor(15, 23, 42);
+                doc.text("Mapa del Evento", 14, currentY);
+                currentY += 5;
 
-            const mapHeight = 80; // Fixed height for map
-            const mapWidth = pageWidth - 28;
-            doc.addImage(mapImg, 'PNG', 14, currentY, mapWidth, mapHeight);
-            currentY += mapHeight + 10;
+                const mapHeight = 80;
+                const mapWidth = pageWidth - 28;
+                
+                // Usamos 'JPEG' o 'auto' para ser más tolerantes con la firma de la imagen
+                // 'FAST' mejora el rendimiento de compresión
+                doc.addImage(mapImg, 'JPEG', 14, currentY, mapWidth, mapHeight, undefined, 'FAST');
+                currentY += mapHeight + 10;
+            } catch (imgErr) {
+                console.warn("Error insertando imagen del mapa en PDF:", imgErr);
+                doc.setFontSize(10);
+                doc.setTextColor(239, 68, 68);
+                doc.text("[Error al renderizar la imagen del mapa]", 14, currentY);
+                currentY += 10;
+            }
         }
 
         // --- Stats Table (Impact Summary) ---
@@ -414,14 +425,14 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
                     const infraBody = topPoints.map(p => [
                         p.type === 'police' ? 'Policia' : (p.type === 'fire_station' ? 'Bomberos' : 'Salud'),
                         p.isOfficial ? `${p.name} (OFICIAL)` : p.name,
-                        p.phone && p.phone !== 'No registrado' ? p.phone : 'Sin tel.',
-                        p.fuente || 'Internet',
+                        p.phone && p.phone !== 'No registrado' && p.phone !== 'Sin datos' ? p.phone : (p.telefono || 'Sin tel.'),
+                        p.address || p.direccion ||  '-',
                         `${p.dist.toFixed(2)} km`
                     ]);
 
                     autoTable(doc, {
                         startY: currentY,
-                        head: [['Tipo', 'Nombre', 'Contacto', 'Fuente', 'Distancia']],
+                        head: [['Tipo', 'Nombre', 'Contacto', 'Dirección', 'Distancia']],
                         body: infraBody,
                         theme: 'striped',
                         headStyles: { fillColor: [75, 85, 99], textColor: 255 },
@@ -447,13 +458,13 @@ export const generatePDFReport = (allSedes, affectedSedes, nearbySedes, eventDet
                 const infraBody = reportInfrastructure.slice(0, 10).map(p => [
                     p.type === 'police' ? 'Policia' : (p.type === 'fire_station' ? 'Bomberos' : 'Salud'),
                     p.name,
-                    p.phone || 'No registrado', // Phone Column
-                    `${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}`
+                    p.phone && p.phone !== 'No registrado' && p.phone !== 'Sin datos' ? p.phone : (p.telefono || 'Sin tel.'),
+                    p.address || p.direccion || '-'
                 ]);
 
                 autoTable(doc, {
                     startY: currentY,
-                    head: [['Tipo', 'Nombre / Descripcion', 'Contacto', 'Ubicacion']],
+                    head: [['Tipo', 'Nombre / Descripcion', 'Contacto', 'Dirección']],
                     body: infraBody,
                     theme: 'striped',
                     headStyles: { fillColor: [75, 85, 99], textColor: 255 },

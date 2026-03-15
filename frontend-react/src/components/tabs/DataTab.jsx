@@ -108,16 +108,6 @@ const DataTab = ({
                             <span>Borrar Historial</span>
                         </button>
 
-                        {affectedColaboradores.length > 0 && (
-                            <button
-                                onClick={() => downloadColaboradoresCSV(affectedColaboradores)}
-                                className="btn-layer"
-                                style={{ gridColumn: 'span 2', borderColor: '#cbd5e1', background: '#f8fafc' }}
-                            >
-                                <span style={{ fontSize: '1.5rem' }}>📊</span>
-                                <span>Descargar Lista Afectada</span>
-                            </button>
-                        )}
                     </>
                 )}
             </div>
@@ -129,8 +119,8 @@ const DataTab = ({
                         🚨 Zona de Riesgo Activa
                     </h5>
                     <div style={{ fontSize: '0.95rem', marginBottom: '15px', color: '#7f1d1d' }}>
-                        <div style={{ marginBottom: '5px' }}>🏢 <strong>{affectedSedes.length}</strong> Sedes Afectadas</div>
-                        <div>👥 <strong>{affectedColaboradores.length}</strong> Empleados en Riesgo</div>
+                        <div style={{ marginBottom: '5px' }}>🏢 <strong>{affectedSedes.length}</strong> Sedes afectadas</div>
+                        <div>👥 <strong>{affectedColaboradores.length}</strong> Colaboradores en zona afectada</div>
                     </div>
                     <p style={{ fontSize: '0.8rem', color: '#991b1b', fontStyle: 'italic', marginBottom: '15px' }}>
                         * Estos datos serán incluidos automáticamente en el reporte.
@@ -138,15 +128,15 @@ const DataTab = ({
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                         <button
                             onClick={() => onSave()}
-                            style={{ background: '#0f172a', color: 'white', padding: '10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                            style={{ background: '#3b82f6', color: 'white', padding: '10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 600, boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.2)' }}
                         >
                             Guardar Evento
                         </button>
                         <button
                             onClick={() => onGenerateReport({ includeColaboradoresList: true })}
-                            style={{ background: '#16a34a', color: 'white', padding: '10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                            style={{ background: '#10b981', color: 'white', padding: '10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 600, boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.2)' }}
                         >
-                            Generar PDF
+                            Generar Informe
                         </button>
                     </div>
                 </div>

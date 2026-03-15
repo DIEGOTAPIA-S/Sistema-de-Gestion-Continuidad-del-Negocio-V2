@@ -19,6 +19,8 @@ import NewsFeed from '../components/NewsFeed';
 // Componentes y Hooks refactorizados
 import DashboardHeader from '../components/DashboardHeader';
 import RiskAlertBanner from '../components/RiskAlertBanner';
+import SideDrawer from '../components/SideDrawer';
+import GlassCard from '../components/GlassCard';
 import useMapLayers from '../hooks/useMapLayers';
 import useAnalysis from '../hooks/useAnalysis';
 import useReporting from '../hooks/useReporting';
@@ -213,13 +215,14 @@ const MapDashboard = () => {
                     onSearchColaborador={setSearchTerm}
                     colaboradores={colaboradores}
                     sedes={sedes}
+                    earthquakeAlerts={earthquakeAlerts}
                     onLocate={handleLocate}
                 />
 
-                <main className="flex-1 flex flex-col overflow-y-auto relative bg-slate-900 custom-scrollbar">
+                <main className="flex-1 overflow-y-auto relative bg-slate-50 custom-scrollbar">
                     {layers.showNews && <NewsFeed isOpen={true} onClose={layers.toggleNews} />}
 
-                    <div id="map-capture" className="h-[75vh] min-h-[600px] relative shadow-2xl overflow-hidden border-b border-white/5">
+                    <div id="map-capture" className="h-[65vh] min-h-[500px] relative shadow-2xl overflow-hidden border-b border-white/5">
                         <MapComponent sedes={filteredSedes} onAnalysisUpdate={handleAnalysisUpdate} focusLocation={focusLocation}>
                             <EarthquakeLayer visible={layers.showEarthquakes} onAlertsUpdate={setEarthquakeAlerts} />
                             <WeatherLayer visible={layers.showWeather} sedes={sedes} />
@@ -238,27 +241,20 @@ const MapDashboard = () => {
 
                         {layers.showTraffic && (
                             <div className="absolute inset-0 z-[2000] bg-slate-900 flex flex-col animate-in fade-in duration-500">
-                                <div className="p-3 flex justify-between items-center glass-panel border-none rounded-none border-b border-white/5">
-                                    <span className="font-bold text-xs uppercase tracking-widest text-blue-400">Tráfico en Tiempo Real (Waze)</span>
-                                    <button onClick={layers.toggleTraffic} className="text-[10px] font-black bg-crisis text-white px-3 py-1.5 rounded-lg">CERRAR</button>
-                                </div>
-                                <iframe src="https://embed.waze.com/iframe?zoom=12&lat=4.711&lon=-74.072&ct=livemap" className="flex-1 border-none grayscale opacity-90 invert hue-rotate-180" allowFullScreen></iframe>
+                                <button 
+                                    onClick={layers.toggleTraffic} 
+                                    className="absolute top-4 right-4 z-[2001] w-8 h-8 flex items-center justify-center bg-white/90 text-slate-900 rounded-full shadow-lg hover:bg-white transition-colors font-bold text-xl border border-slate-200"
+                                    title="Cerrar Mapa de Tráfico"
+                                >
+                                    &times;
+                                </button>
+                                <iframe 
+                                    src="https://embed.waze.com/iframe?zoom=12&lat=4.711&lon=-74.072&ct=livemap" 
+                                    className="flex-1 border-none w-full h-full" 
+                                    allowFullScreen
+                                ></iframe>
                             </div>
                         )}
-
-                        {/* Floating Action Dock */}
-                        <MapDock 
-                            onGenerateReport={() => reporting.handleGenerateReport({}, sedesWithStatus)}
-                            onSaveEvent={handleSaveEvent}
-                            onShowHistory={() => setShowHistory(true)}
-                            onShowList={() => setShowList(true)}
-                            onShowHelp={() => setShowHelp(true)}
-                            showCharts={showCharts}
-                            onToggleCharts={() => setShowCharts(!showCharts)}
-                            showMetrics={showMetricsPanel}
-                            onToggleMetrics={() => setShowMetricsPanel(!showMetricsPanel)}
-                            affectedCount={analysis.affectedSedes.length}
-                        />
                     </div>
 
                     <RiskAlertBanner 
@@ -269,7 +265,7 @@ const MapDashboard = () => {
 
                     <div className="p-8">
                         {/* Event Registration (Could also be a Drawer, but keeping here for context) */}
-                        <div className="glass-panel p-8 rounded-3xl border-blue-500/10 mb-8">
+                        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm mb-8">
                              <EventRegistrationPanel 
                                 eventDetails={eventDetails} 
                                 onChange={(e) => setEventDetails(prev => ({...prev, [e.target.name]: e.target.value}))} 
@@ -279,10 +275,10 @@ const MapDashboard = () => {
 
                         {showCharts && (
                             <div className="animate-in fade-in slide-in-from-bottom duration-1000">
-                                <GlassCard title="Análisis de Impacto Georeferenciado" icon="📊" className="mb-8">
+                                <GlassCard title="Análisis de Impacto Georeferenciado" icon="📊" className="mb-8" light={true}>
                                     <div id="charts-capture"><DashboardCharts sedes={sedesWithStatus} /></div>
                                 </GlassCard>
-                                <GlassCard title="Sedes en Punto de Control" icon="🏢">
+                                <GlassCard title="Sedes en Punto de Control" icon="🏢" light={true}>
                                     <AffectedListTable affectedSedes={analysis.affectedSedes} nearbySedes={analysis.nearbySedes} />
                                 </GlassCard>
                             </div>
@@ -290,7 +286,7 @@ const MapDashboard = () => {
 
                         {showMetricsPanel && (
                             <div className="animate-in zoom-in duration-500">
-                                <GlassCard title="Métricas de Continuidad de Negocio" icon="📈">
+                                <GlassCard title="Métricas de Continuidad de Negocio" icon="📈" light={true}>
                                     <MetricsDashboard />
                                 </GlassCard>
                             </div>
@@ -314,13 +310,9 @@ const MapDashboard = () => {
                 <EventHistoryModal isInsideDrawer onClose={() => setShowHistory(false)} />
             </SideDrawer>
 
-            <SideDrawer 
-                isOpen={showList} 
-                onClose={() => setShowList(false)} 
-                title="Directorio de Sedes"
-            >
-                <SedeListModal isInsideDrawer sedes={sedesWithStatus} onClose={() => setShowList(false)} />
-            </SideDrawer>
+            {showList && (
+                <SedeListModal sedes={sedesWithStatus} onClose={() => setShowList(false)} />
+            )}
 
             {showHelp && <InstructionsModal onClose={() => setShowHelp(false)} />}
 

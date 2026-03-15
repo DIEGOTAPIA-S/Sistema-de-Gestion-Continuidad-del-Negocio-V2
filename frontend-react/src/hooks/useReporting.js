@@ -11,69 +11,36 @@ const useReporting = (user, affectedSedes, nearbySedes, affectedColaboradores, e
     
     const handleGenerateReport = async (options = {}, sedesWithStatus) => {
         try {
-            // Captura del Mapa
+            // Captura del Mapa con html-to-image (más fiable que html2canvas para Leaflet)
             const mapElement = document.getElementById('map-capture');
             let mapImg = null;
             if (mapElement) {
-                window.scrollTo(0, 0);
-                await new Promise(resolve => setTimeout(resolve, 2000));
-
                 try {
-                    const canvas = await html2canvas(mapElement, {
-                        useCORS: true,
-                        allowTaint: false,
-                        logging: false,
+                    // Esperar un momento para asegurar que las capas estén renderizadas
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                    mapImg = await toPng(mapElement, {
                         backgroundColor: '#ffffff',
-                        scale: 2,
-                        onclone: (clonedDoc) => {
-                            // Sanitización para PDF
-                            const styles = clonedDoc.getElementsByTagName('style');
-                            for (let s of styles) {
-                                if (s.innerHTML.includes('oklch') || s.innerHTML.includes('oklab')) {
-                                    s.disabled = true;
-                                    s.remove();
-                                }
+                        quality: 0.95,
+                        pixelRatio: 1.5, // Balance entre calidad y tamaño de archivo
+                        filter: (node) => {
+                            // Ignorar controles de Leaflet
+                            if (node && node.classList) {
+                                return !(
+                                    node.classList.contains('leaflet-control-container') ||
+                                    node.classList.contains('leaflet-draw-toolbar')
+                                );
                             }
-                            clonedDoc.querySelectorAll('*').forEach(el => {
-                                const s = el.getAttribute('style');
-                                if (s && (s.includes('oklch') || s.includes('oklab'))) {
-                                    el.setAttribute('style', s.replace(/oklch\([^)]+\)/g, '#3b82f6').replace(/oklab\([^)]+\)/g, '#3b82f6'));
-                                }
-                            });
-                        },
-                        ignoreElements: (node) => {
-                            if (!node || !node.classList) return false;
-                            return (
-                                node.classList.contains('leaflet-control-container') ||
-                                node.classList.contains('leaflet-draw-toolbar') ||
-                                node.id === 'search-control'
-                            );
+                            return true;
                         }
                     });
-
-                    if (canvas) {
-                        mapImg = canvas.toDataURL('image/png');
-                    }
                 } catch (mapErr) {
-                    console.error("Error capturando Mapa:", mapErr);
+                    console.error("Error capturando Mapa con toPng:", mapErr);
                 }
             }
 
-            // Captura de Gráficas
-            let chartsImg = null;
-            const chartsElement = document.getElementById('charts-capture-hidden');
-            if (chartsElement) {
-                try {
-                    await new Promise(resolve => setTimeout(resolve, 3500));
-                    chartsImg = await toPng(chartsElement, {
-                        backgroundColor: '#ffffff',
-                        quality: 1,
-                        pixelRatio: 2,
-                    });
-                } catch (chartErr) {
-                    console.error("Error capturando gráficas:", chartErr);
-                }
-            }
+            // Gráficas: No capturamos imagen aquí porque reportGenerator las dibuja de forma nativa
+            const chartsImg = null;
 
             // Gestión de Infraestructura para el reporte
             let reportInfrastructure = infrastructurePoints;

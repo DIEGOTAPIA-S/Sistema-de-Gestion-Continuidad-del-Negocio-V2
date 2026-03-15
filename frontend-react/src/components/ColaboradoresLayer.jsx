@@ -26,6 +26,15 @@ const ColaboradoresLayer = ({ visible, colaboradores }) => {
             chunkedLoading
             spiderfyOnMaxZoom={true}
             showCoverageOnHover={false}
+            iconCreateFunction={(cluster) => {
+                const count = cluster.getChildCount();
+                return L.divIcon({
+                    html: `<div style="background-color: #3b82f6; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 2px solid white; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3); font-size: 14px;">${count}</div>`,
+                    className: 'custom-cluster-icon',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+            }}
         >
             {validPoints.map((colab) => (
                 <Marker

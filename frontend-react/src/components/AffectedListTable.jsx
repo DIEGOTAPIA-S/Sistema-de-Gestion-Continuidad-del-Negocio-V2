@@ -13,12 +13,9 @@ const AffectedListTable = ({ affectedSedes = [], nearbySedes = [] }) => {
 
     return (
         <div style={{
-            background: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            padding: '20px',
-            marginTop: '20px',
-            marginBottom: '40px' // Add bottom margin for scrolling
+            background: 'transparent',
+            padding: '10px 0',
+            marginBottom: '20px'
         }}>
             <h3 style={{
                 margin: '0 0 20px 0',
